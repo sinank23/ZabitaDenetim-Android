@@ -1,0 +1,6 @@
+package com.example.zabitadenetim.data
+
+data class LoginRequest(
+    val email: String,
+    val password: String
+)

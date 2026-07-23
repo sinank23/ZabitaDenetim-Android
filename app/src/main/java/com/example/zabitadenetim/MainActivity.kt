@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.zabitadenetim.presentation.InspectionScreen
-import com.example.zabitadenetim.ui.theme.ZabitaDenetimTheme // Kendi proje adına göre import edilebilir
+import com.example.zabitadenetim.ui.screens.login.LoginScreen
+import com.example.zabitadenetim.ui.theme.ZabitaDenetimTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,8 +19,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Kendi yazdığımız ekranı çağırıyoruz
-                    InspectionScreen()
+                    // Kendi çizdiğimiz Login ekranını buraya çağırıyoruz
+                    LoginScreen()
                 }
             }
         }
