@@ -68,4 +68,7 @@ dependencies {
     // ViewModel ve Coroutines (Arka plan işlemleri ve durum yönetimi)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // navigation kütüphanesini ekledik
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 }

@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -16,12 +17,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun LoginScreen(
+    onNavigateToHome: () -> Unit,
     // viewmodeli buraya entegre ediyoruz.
     viewModel: LoginViewModel = viewModel()
 ) {
     // email ve şifreyi tutacağımız durum değişkenleri
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
 
     // şimdi yazacağımız yapı sayesinde ekranda elemanlar yukardan aşağıya dizilecek
     Column(
@@ -78,7 +82,8 @@ fun LoginScreen(
            onClick = {
                // butona basıldığı anda viewmodeldeki login fonksiyonuna
                // veriler gönderiliyor
-               viewModel.login(email = email, password = password)
+               viewModel.login( context = context, email = email, password = password)
+               onNavigateToHome() // butona tıklandıığında ana ekrana geçişi tetikliyoruz.
 
            },
            modifier = Modifier
