@@ -51,7 +51,7 @@ fun InspectionCard(inspection: InspectionResponse) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "İşletme ID: ${inspection.businessId}", style = MaterialTheme.typography.titleMedium)
+            Text(text = "İşletme ID: ${inspection.businessName}", style = MaterialTheme.typography.titleMedium)
             Text(text = "Durum: ${inspection.status}")
 
             // Eğer AI raporu varsa ekranda göster

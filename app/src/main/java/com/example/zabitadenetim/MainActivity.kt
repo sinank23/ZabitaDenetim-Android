@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.example.zabitadenetim.data.ApiClient
 import com.example.zabitadenetim.data.TokenManager
 import com.example.zabitadenetim.ui.screens.login.LoginScreen
 import com.example.zabitadenetim.ui.screens.login.home.HomeScreen
@@ -21,6 +22,8 @@ import com.example.zabitadenetim.ui.theme.ZabitaDenetimTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ApiClient.init(applicationContext)
+
         setContent {
             ZabitaDenetimTheme {
                 Surface(
