@@ -6,7 +6,6 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-// YENİ EKLENDİ: Butonları yan yana dizmek için Arrangement
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,12 +14,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+// YENİ EKLENDİ (UX): Animasyon boyutlandırması için size importu
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+// YENİ EKLENDİ (UX): Yükleme animasyonu bileşeni
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,7 +46,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-// YENİ EKLENDİ: Kamera dosyası ve Multipart işlemleri için kütüphaneler
 import androidx.core.content.FileProvider
 import java.io.File
 import java.text.SimpleDateFormat
@@ -56,8 +59,6 @@ import com.example.zabitadenetim.data.ApiClient
 import com.example.zabitadenetim.ui.model.InspectionRequest
 import kotlinx.coroutines.launch
 import kotlin.contracts.contract
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewInspectionScreen(onNavigateBack: () -> Unit) {
@@ -88,10 +89,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
     }
 
-
-
     // galeriyi açmak ve çoklu seçim yapack olan launcher
-
     val multiplePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
 
@@ -101,6 +99,11 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
         }
 
     }
+
+    // YENİ EKLENDİ (AI): Yapay Zeka Raporu için durum yöneticileri
+    var showAiReportDialog by remember { mutableStateOf(false) }
+    var aiReportText by remember { mutableStateOf("") }
+    var isAiLoading by remember { mutableStateOf(false) }
 
     val inspectionQuestions = listOf(
         "İşyeri açma ve çalıştırma ruhsatır var mı?",
@@ -222,7 +225,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-           // (28.07.2026) galeri ve kamera butonların
+            // (28.07.2026) galeri ve kamera butonların
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -265,9 +268,6 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
             // fotoğraf seçme arayüzünün sonu
 
-
-
-
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
@@ -281,63 +281,110 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
                         coroutineScope.launch {
                             try {
-                                // önce metinsel verileri kaydettik.
-                                val response =
-                                    ApiClient.apiService.createInspection(requestData)
+                                isAiLoading = true
 
+                                // 1. Aşama: Metinleri Kaydet
+                                val response = ApiClient.apiService.createInspection(requestData)
                                 Log.d("DenetimKayit", "Kayıt Başarılı!")
 
-                                // fotoğrafları sunucuya gönderme işlevi eklendi
+                                // 2. Aşama: Fotoğrafları Gönder ve Analiz Et
                                 if (selectedImageUris.isNotEmpty()) {
-                                    // Seçilen URI'leri MultipartBody.Part formatına dönüştürüyoruz
-                                    val multipartParts =
-                                        selectedImageUris.mapNotNull { uri ->
-                                            prepareFilePart(context, uri)
-                                        }
+                                    val multipartParts = selectedImageUris.mapNotNull { uri ->
+                                        prepareFilePart(context, uri)
+                                    }
 
                                     if (multipartParts.isNotEmpty()) {
                                         ApiClient.apiService.uploadInspectionPhotos(
                                             response.id,
                                             multipartParts
                                         )
-                                        Log.d(
-                                            "DenetimKayit",
-                                            "Fotoğraflar başarıyla gönderildi"
-                                        )
+                                        Log.d("DenetimKayit", "Fotoğraflar başarıyla gönderildi")
                                     }
-
                                 }
-                                onNavigateBack()
-                            } catch (e: retrofit2.HttpException) {
-                                // YENİ EKLENEN BLOK: 422 hatasının içindeki JSON'ı çıkarır
-                                val errorBody =
-                                    e.response()?.errorBody()?.string()
 
-                                Log.e(
-                                    "DenetimKayit",
-                                    "FastAPI'den Gelen Detay: $errorBody"
-                                )
+                                // 3. Aşama: Nihai Raporu İste (YENİ GÜNCELLEME)
+                                val aiResponse = ApiClient.apiService.completeInspection(response.id)
+
+                                if (aiResponse.isSuccessful && aiResponse.body() != null) {
+                                    aiReportText = aiResponse.body()!!.aiReport
+                                    showAiReportDialog = true // Başarılıysa raporu göster
+                                } else {
+                                    // Sunucudan 404, 500 gibi bir hata dönerse ana ekrana atma, hatayı ekrana bas!
+                                    aiReportText = "Sunucu Hatası (Kod: ${aiResponse.code()})\nDetay: ${aiResponse.errorBody()?.string()}"
+                                    showAiReportDialog = true
+                                }
+
+                            } catch (e: retrofit2.HttpException) {
+                                // HTTP bağlantı kopması olursa ekranda göster
+                                aiReportText = "Bağlantı (HTTP) Hatası:\n${e.response()?.errorBody()?.string()}"
+                                showAiReportDialog = true
                             } catch (e: Exception) {
-                                Log.e(
-                                    "DenetimKayit",
-                                    "Kayıt Hatası: ${e.localizedMessage}"
-                                )
+                                // Timeout (Zaman Aşımı) veya çökme olursa ekranda göster
+                                aiReportText = "İşlem Hatası (Muhtemelen Zaman Aşımı):\n${e.localizedMessage}"
+                                showAiReportDialog = true
+                            } finally {
+                                isAiLoading = false
                             }
                         }
                     } else {
-                        Log.e(
-                            "DenetimKayit",
-                            "HATA: İşletme adı veya adres boş bırakılamaz!"
-                        )
+                        Log.e("DenetimKayit", "HATA: İşletme adı veya adres boş bırakılamaz!")
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isAiLoading
             ) {
-                Text("Denetimi Kaydet")
+                // yükleme sırasında dönen bi ikon ekliyoruz 29.07.2026
+
+                if (isAiLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Yapay zeka analiz ediyor...")
+
+                } else{
+                    Text("Denetimi Kaydet")
+                }
+
+
+
+                // YENİ EKLENDİ (AI): Yükleme esnasında butonun yazısını değişti
             }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+
+        // YENİ EKLENDİ (AI): Yapay Zeka Raporunu Gösteren Açılır Pencere
+        if (showAiReportDialog) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { /* Boşluğa tıklayınca kapanmasın, butona basması zorunlu olsun */ },
+                title = {
+                    Text(
+                        text = "Yapay Zeka Değerlendirme Raporu",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
+                text = {
+                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                        Text(text = aiReportText)
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showAiReportDialog = false
+                            onNavigateBack() // Rapor okunduktan sonra ana ekrana yönlendir
+                        }
+                    ) {
+                        Text("Tamam ve Kapat")
+                    }
+                }
+            )
+        }
+
     }
 }
 
@@ -360,12 +407,6 @@ fun createImageUri(context: Context): Uri? {
         imageFile
     )
 }
-
-
-
-
-
-
 
 fun prepareFilePart(
     context: Context,

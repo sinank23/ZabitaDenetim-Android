@@ -12,6 +12,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.Response
 
 
 interface ZabitaApi {
@@ -21,8 +22,6 @@ interface ZabitaApi {
     suspend fun getInspections(): List<InspectionResponse>   // retrofit sunucudan gelen json veriyi otomatik buraya düşürüyor
 
     // denetimi yapay zekayla tamamlamak için.
-    @POST("inspections/{id}/complete")
-    suspend fun  completeInspection(@Path("id") inspectionId: Int): InspectionResponse
 
     // yeni denetim verisini json formatında sunucuya yollamak için
     @POST("inspections/")
@@ -37,7 +36,7 @@ interface ZabitaApi {
 
     ): ResponseBody // sunucdan dönen JSON yanıtını şimdilik esnek bir Body olarak alıyoruz
 
-    @Multipart
+
 
     @FormUrlEncoded
     @POST("/auth/login")
@@ -45,5 +44,10 @@ interface ZabitaApi {
         @Field("username") email: String,
         @Field("password") password: String
     ): LoginResponse
+
+    @POST("inspections/{inspection_id}/complete/")
+    suspend fun completeInspection(
+        @Path("inspection_id") inspectionId: Int
+    ): Response<CompleteInspectionResponse>
 
 }

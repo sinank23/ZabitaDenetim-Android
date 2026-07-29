@@ -5,6 +5,8 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.sql.Time
+import java.util.concurrent.TimeUnit
 
 object ApiClient {
     private const val BASE_URL = "http://10.0.2.2:8000/"
@@ -34,9 +36,15 @@ object ApiClient {
         chain.proceed(newRequest)
     }
 
+    // ai servisi yanıt verene kadar uygulamanın çökmemesi için zaman aşımı
     private val client = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
+        .connectTimeout(60, TimeUnit.SECONDS) // 60 sn bekle
+        .readTimeout(60, TimeUnit.SECONDS)  // veriyi okuömak için de 60 sn bekle
+        .writeTimeout(60, TimeUnit.SECONDS) // VERİYİ GÖNDERMEK İÇİN DE 60 SN BEKLE
         .build()
+
+
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
@@ -49,4 +57,6 @@ object ApiClient {
     val apiService: ZabitaApi by lazy {
         retrofit.create(ZabitaApi::class.java)
     }
+
+
 }
