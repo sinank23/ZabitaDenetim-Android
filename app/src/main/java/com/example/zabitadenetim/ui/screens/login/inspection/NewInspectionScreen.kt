@@ -59,12 +59,18 @@ import com.example.zabitadenetim.data.ApiClient
 import com.example.zabitadenetim.ui.model.InspectionRequest
 import kotlinx.coroutines.launch
 import kotlin.contracts.contract
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
     var businessName by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+
+    // zabıta notu modülü
+    var inspectorNotes by remember { mutableStateOf("") }
+
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -211,6 +217,19 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                     )
                 }
             }
+
+            // 30.07.2026 eklendi zabıta notu modülü
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = inspectorNotes,
+                onValueChange = {inspectorNotes = it},
+                label = { Text("Zabıta Gözelm ve Notları")},
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 5
+            )
+
+
 
             // foto seçim arayüzü
             Spacer(modifier = Modifier.height(32.dp))

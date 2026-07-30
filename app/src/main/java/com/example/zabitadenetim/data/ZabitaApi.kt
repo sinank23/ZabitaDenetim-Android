@@ -1,6 +1,7 @@
 package com.example.zabitadenetim.data
 
 import com.example.zabitadenetim.ui.model.InspectionRequest
+import kotlinx.serialization.descriptors.PrimitiveKind
 // YENİ EKLENDİ: Multipart ve ResponseBody importları
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
@@ -13,6 +14,7 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.Response
+import retrofit2.http.DELETE
 
 
 interface ZabitaApi {
@@ -49,5 +51,11 @@ interface ZabitaApi {
     suspend fun completeInspection(
         @Path("inspection_id") inspectionId: Int
     ): Response<CompleteInspectionResponse>
+
+
+    @DELETE("inspections/{inspection_id}")
+    suspend fun deleteInspection(
+        @Path("inspection_id") inspectionId: Int
+    ): retrofit2.Response<Unit>
 
 }
