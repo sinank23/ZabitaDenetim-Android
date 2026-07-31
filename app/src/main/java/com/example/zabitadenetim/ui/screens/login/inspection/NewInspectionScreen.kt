@@ -1,6 +1,12 @@
 package com.example.zabitadenetim.ui.screens.login.inspection
 
+// YENİ EKLENDİ (UX): Animasyon boyutlandırması için size importu
+// YENİ EKLENDİ (UX): Yükleme animasyonu bileşeni
+
+// 0959 - GPS işlemleri için gerekli importlar
+import android.Manifest
 import android.content.Context
+import android.location.Location
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -14,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-// YENİ EKLENDİ (UX): Animasyon boyutlandırması için size importu
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -23,7 +28,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-// YENİ EKLENDİ (UX): Yükleme animasyonu bileşeni
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -36,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,19 +52,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.example.zabitadenetim.data.ApiClient
+import com.example.zabitadenetim.ui.model.InspectionRequest
+import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
-
-import com.example.zabitadenetim.data.ApiClient
-import com.example.zabitadenetim.ui.model.InspectionRequest
-import kotlinx.coroutines.launch
-import kotlin.contracts.contract
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +79,43 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
     // dosyaları okuyabilmek için uygulama bağlamını alalım (28.07.2026)
     val context = LocalContext.current
+
+    //lokasyon gps sensörü için client
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    var currentLatitude by remember { mutableStateOf<Double?>(null) }
+    var currentLongitude by remember { mutableStateOf<Double?>(null) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            val isFineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+            val isCoarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+            if (isFineGranted || isCoarseGranted) {
+                try {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                        location?.let {
+                            currentLatitude = it.latitude
+                            currentLongitude = it.longitude
+                        }
+                    }
+                } catch (e: SecurityException) {
+                    Log.e("GPS", "Konum alınamadı: ${e.localizedMessage}")
+                }
+            }
+        }
+    )
+
+    // 0959 - Sayfa açıldığında otomatik olarak konum izni isteğini tetikler
+    LaunchedEffect(Unit) {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
 
     // seçilen fotoğrafların urlelerini tutalım.
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -295,7 +335,12 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                         val requestData = InspectionRequest(
                             businessName = businessName,
                             address = address,
-                            answers = questionStates.toList()
+                            answers = questionStates.toList(),
+                            inspectorNotes = inspectorNotes,
+                            // 0959 - Eksik olan notlar eklendi
+                            latitude = currentLatitude, // 0959 - State'ten gelen güncel enlem eklendi,
+                            // 0959 - State'ten gelen güncel enlem eklendi
+                            longitude = currentLongitude
                         )
 
                         coroutineScope.launch {
@@ -313,10 +358,13 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                     }
 
                                     if (multipartParts.isNotEmpty()) {
-                                        ApiClient.apiService.uploadInspectionPhotos(
-                                            response.id,
-                                            multipartParts
-                                        )
+                                        multipartParts.forEach { photoPart ->
+                                            ApiClient.apiService.uploadInspectionPhoto(
+                                                response.id,
+                                                photoPart
+                                            )
+                                        }
+
                                         Log.d("DenetimKayit", "Fotoğraflar başarıyla gönderildi")
                                     }
                                 }
@@ -447,7 +495,7 @@ fun prepareFilePart(
 
             // Retrofit'in backend'de eşleştireceği "files" anahtarı (FastAPI'deki parametre ismi ile AYNI olmalı)
             MultipartBody.Part.createFormData(
-                "files",
+                "file",
                 fileName,
                 requestFile
             )

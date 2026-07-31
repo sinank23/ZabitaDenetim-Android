@@ -32,10 +32,9 @@ interface ZabitaApi {
     // fotoğraf yükleme endpointi (28.07.2026)
     @Multipart
     @POST("inspections/{inspection_id}/photos/")
-    suspend fun uploadInspectionPhotos(
+    suspend fun uploadInspectionPhoto(
         @Path("inspection_id") inspectionId: Int,
-        @Part files: List<MultipartBody.Part>  // birden fazla foto gönderileceği için liste yapısı şeklinde tuttuk
-
+        @Part file: MultipartBody.Part
     ): ResponseBody // sunucdan dönen JSON yanıtını şimdilik esnek bir Body olarak alıyoruz
 
 

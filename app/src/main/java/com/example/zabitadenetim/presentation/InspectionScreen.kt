@@ -25,6 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.zabitadenetim.data.InspectionResponse
 
+import android.Manifest
+import android.location.Location
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.location.LocationServices
+
 @Composable
 fun InspectionScreen(viewModel: InspectionViewModel = viewModel(),
                      onNavigateToDetail: (Int) -> Unit = {}
@@ -33,11 +40,50 @@ fun InspectionScreen(viewModel: InspectionViewModel = viewModel(),
     // ARKA PLANDA SİLME İSTEĞİ ATMAK İÇİN (30.07.2026)
     val coroutineScope = rememberCoroutineScope()
 
+    // 31.07.2026 // gps sensörü tanımlaması
+    val context = LocalContext.current
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    // 31.07.2026
+    var currentLatitude by remember { mutableStateOf<Double?>(null) }
+    var currentLongitude by remember { mutableStateOf<Double?>(null) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            // izin kontrolleri
+            val isFineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+            val isCoarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+            if (isFineGranted || isCoarseGranted) {
+                try {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                        location?.let {
+                            currentLatitude = it.latitude
+                            currentLongitude = it.longitude
+                        }
+                    }
+                } catch (e: SecurityException) {
+                    // güvenlik istisnası
+                }
+            }
+
+        }
+    )
+
 
         // ekran ilk açıldığında ekrana denetimler gelsim
     LaunchedEffect(key1 = true) {
         viewModel.fetchInspections()
     }
+
+    // 31.07.2026
+    locationPermissionLauncher.launch(
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    )
 
 
     val inspections = viewModel.inspections.value  // apiden gelen denetim listesi
