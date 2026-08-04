@@ -63,6 +63,11 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.zabitadenetim.data.BusinessResponse
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenu
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +75,38 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
     var businessName by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+
+    //04.08.2026
+    var businesses by remember {
+        mutableStateOf<List<BusinessResponse>>(emptyList())
+    }
+
+    var selectedBusiness by remember {
+        mutableStateOf<BusinessResponse?>(null)
+    }
+
+    var isBusinessMenuExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    var isBusinessesLoading by remember {
+        mutableStateOf(false)
+    }
+    //04.08.2026v
+    LaunchedEffect(Unit) {
+        isBusinessesLoading = true
+
+        try {
+            businesses = ApiClient.apiService.getBusinesses()
+        } catch (e: Exception) {
+            Log.e(
+                "IsletmeListesi",
+                "İşletmeler alınamadı: ${e.localizedMessage}"
+            )
+        } finally {
+            isBusinessesLoading = false
+        }
+    }
 
     // zabıta notu modülü
     var inspectorNotes by remember { mutableStateOf("") }
@@ -209,6 +246,59 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            if (isBusinessesLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            } else {
+                ExposedDropdownMenuBox(
+                    expanded = isBusinessMenuExpanded,
+                    onExpandedChange = {
+                        isBusinessMenuExpanded = !isBusinessMenuExpanded
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = selectedBusiness?.name ?: "Kayıtlı işletme seç",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Kayıtlı İşletmeler") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = isBusinessMenuExpanded
+                            )
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+
+                    DropdownMenu(
+                        expanded = isBusinessMenuExpanded,
+                        onDismissRequest = {
+                            isBusinessMenuExpanded = false
+                        }
+                    ) {
+                        businesses.forEach { business ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(business.name)
+                                },
+                                onClick = {
+                                    selectedBusiness = business
+                                    businessName = business.name
+                                    address = business.address ?: ""
+                                    isBusinessMenuExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             OutlinedTextField(
                 value = businessName,
                 onValueChange = { businessName = it },
@@ -336,7 +426,8 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                             businessName = businessName,
                             address = address,
                             answers = questionStates.toList(),
-                            inspectorNotes = inspectorNotes,
+                            inspector_notes = inspectorNotes,
+                            business_id = selectedBusiness?.id,
                             // 0959 - Eksik olan notlar eklendi
                             latitude = currentLatitude, // 0959 - State'ten gelen güncel enlem eklendi,
                             // 0959 - State'ten gelen güncel enlem eklendi

@@ -10,9 +10,10 @@ data class InspectionRequest(
 
     // 30.07.2026 tarihinde eklendi
     val inspector_notes: String? = null,
+    val business_id: Int? = null,
 
     // konum bilgileri 31.07.2026
-    val inspectorNotes: String,
+
     val latitude: Double?,
     val longitude: Double?
 )

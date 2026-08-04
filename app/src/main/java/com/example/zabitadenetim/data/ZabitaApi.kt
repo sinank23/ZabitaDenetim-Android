@@ -23,6 +23,10 @@ interface ZabitaApi {
     @GET("inspections/")
     suspend fun getInspections(): List<InspectionResponse>   // retrofit sunucudan gelen json veriyi otomatik buraya düşürüyor
 
+    // 04.08.2026 eklendi
+    @GET("businesses/")
+    suspend fun getBusinesses(): List<BusinessResponse>
+
     // denetimi yapay zekayla tamamlamak için.
 
     // yeni denetim verisini json formatında sunucuya yollamak için
