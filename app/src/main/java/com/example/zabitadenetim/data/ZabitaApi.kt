@@ -57,4 +57,11 @@ interface ZabitaApi {
         @Path("inspection_id") inspectionId: Int
     ): retrofit2.Response<Unit>
 
+    // 03.08.2026
+    // arayüz google yorumlarıu için
+    @GET("/inspections/businesses/{businessId}/reviews")
+    suspend fun getBusinessReviews(
+        @Path("business_id") businessId: Int
+    ): List<ReviewResponse>
+
 }

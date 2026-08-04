@@ -15,6 +15,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.zabitadenetim.presentation.InspectionViewModel
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +30,22 @@ fun InspectionDetailScreen(
 ) {
     // tıklanan denetimin idsini listede arayıp bulduk
     val inspection = viewModel.inspections.value.find { it.id == inspectionId }
+
+    // 03.08.2026 eklendi
+    val reviews by viewModel.reviews.collectAsState()
+    val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
+
+
+    LaunchedEffect(inspectionId) {
+        viewModel.fetchInspections()
+    }
+
+    // sayfa açıldığında o işletmenin yorumlarını getir
+    LaunchedEffect(key1 = inspection?.businessId) {
+        inspection?.businessId?.let { businessId ->
+            viewModel.fetchBusinessReviews(businessId)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -74,19 +94,18 @@ fun InspectionDetailScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = inspection.businessName,
+                            text = inspection.businessName ?: "İşletme adı belirtilmemiş",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Adres: ${inspection.notes ?: "Belirtilmemiş"}",
-                            style = MaterialTheme.typography.bodyMedium
+                            text = "Adres: ${inspection.address ?: "Belirtilmemiş"}",                            style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Durum: ${inspection.status}",
+                            text = "Durum: ${inspection.status ?: "Bekliyor"}",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -95,6 +114,57 @@ fun InspectionDetailScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 14.52 YENİ EKLENDİ: 2. KART - YAPAY ZEKA BAŞMÜFETTİŞ RAPORU
+
+
+                // 03.08.2026 YENİ EKLENDİ: 3. KART - GOOGLE YORUMLARI
+                Text(
+                    text =  "Google Müşteri Yorumları",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (isLoadingReviews) {
+                    CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+                } else if (reviews.isEmpty()) {
+                    Text(
+                        text = "Bu işletme için yorum bulunmuyor.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    // yorumları döngüye sok ve alt alta yaz
+                    reviews.forEach { review ->
+                        Card (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+
+                        ) {
+                            Column (modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "${review.authorName} - Puan: ${review.rating}",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = review.text ?: "Kullanıcı metin girmeden sadece puan bırakmış.",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+
                 Text(
                     text = "Yapay Zeka Çapraz Analiz Raporu",
                     style = MaterialTheme.typography.titleMedium,
@@ -111,7 +181,8 @@ fun InspectionDetailScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = inspection.aiSummary ?: "Bu denetim için henüz yapay zeka raporu oluşturulmamış veya analiz ediliyor.",
+                            text = inspection.aiSummary
+                                ?: "Bu denetim için henüz yapay zeka raporu oluşturulmamış.",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }

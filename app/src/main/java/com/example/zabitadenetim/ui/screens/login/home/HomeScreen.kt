@@ -164,8 +164,7 @@ fun HomeScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = inspection.businessName,
-                                            style = MaterialTheme.typography.titleLarge,
+                                            text = inspection.businessName ?: "İşletme adı yok",                                            style = MaterialTheme.typography.titleLarge,
                                             color = MaterialTheme.colorScheme.primary
                                         )
 
@@ -173,8 +172,13 @@ fun HomeScreen(
                                             text = if (!inspection.inspectionDate.isNullOrEmpty()) {
                                                 inspection.inspectionDate.take(10)
                                             } else {
-                                                "Tarih Yok"
+                                                "Tarih yok"
                                             },
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = "Denetim #${inspection.id}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -183,13 +187,7 @@ fun HomeScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     Text(
-                                        text = "Durum: ${
-                                            if (!inspection.status.isNullOrEmpty()) {
-                                                inspection.status
-                                            } else {
-                                                "Bekliyor"
-                                            }
-                                        }",
+                                        text = "Durum: ${inspection.status ?: "Bekliyor"}",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold
                                     )

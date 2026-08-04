@@ -177,17 +177,29 @@ fun InspectionCard(
             verticalAlignment = Alignment.Top
         ) {
 
-            // Sol taraftaki bilgiler
-            Column(modifier = Modifier.weight(1f).padding(16.dp)) {
-                Text(text = "İşletme ID: ${inspection.businessName}", style = MaterialTheme.typography.titleMedium)
-                Text(text = "Durum: ${inspection.status}")
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = inspection.businessName,
+                    style = MaterialTheme.typography.titleMedium
+                )
 
-                // Eğer AI raporu varsa ekranda göster
-                if (inspection.aiSummary != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "AI Analizi:", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                    Text(text = inspection.aiSummary, style = MaterialTheme.typography.bodyMedium)
-                }
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Adres: ${inspection.address ?: "Belirtilmemiş"}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Durum: Denetim kaydı oluşturuldu",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             // Sağ taraftaki çöp tenekesi ikonu (SİLME BUTONU)
