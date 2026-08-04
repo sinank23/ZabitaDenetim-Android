@@ -68,6 +68,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.DropdownMenu
+import com.example.zabitadenetim.data.GooglePlaceResponse
+import androidx.compose.ui.text.font.FontWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +77,24 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
     var businessName by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+
+    // google aramasından dönen işletmeleri tut
+    var googlePlaces by remember {
+        mutableStateOf<List<GooglePlaceResponse>>(emptyList())
+    }
+
+    // google sonuçlarını seç
+    var selectedGooglePlace by remember {
+        mutableStateOf<GooglePlaceResponse?>(null)
+    }
+
+    var isGooglePlacesMenuExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    var isGooglePlacesLoading by remember {
+        mutableStateOf(false)
+    }
 
     //04.08.2026
     var businesses by remember {
@@ -305,6 +325,116 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                 label = { Text("İşletme Adı") },
                 modifier = Modifier.fillMaxWidth()
             )
+            // 04.08.2026
+// Yazılan işletme adını telefonun mevcut konumuna göre Google Maps'te arar.
+            Button(
+                onClick = {
+                    Log.d("GoogleIsletmeArama", "Arama butonuna basıldı")
+
+                    // Telefonun o anda tuttuğu GPS değerlerini alıyoruz.
+                    val latitude = currentLatitude
+                    val longitude = currentLongitude
+
+                    Log.d(
+                        "GoogleIsletmeArama",
+                        "Konum değerleri -> latitude: $latitude, longitude: $longitude"
+                    )
+
+                    // Arama yapabilmek için işletme adı ve GPS bilgileri hazır olmalı.
+                    if (
+                        businessName.isNotBlank() &&
+                        latitude != null &&
+                        longitude != null
+                    ) {
+                        coroutineScope.launch {
+                            isGooglePlacesLoading = true
+
+                            try {
+                                // İşletme adı ve telefonun konumu backend'e gönderiliyor.
+                                googlePlaces = ApiClient.apiService.searchGooglePlaces(
+                                    query = businessName,
+                                    latitude = latitude,
+                                    longitude = longitude
+                                )
+
+                                Log.d(
+                                    "GoogleIsletmeArama",
+                                    "${googlePlaces.size} işletme bulundu."
+                                )
+
+                                // Sonuç varsa seçim menüsünü açıyoruz.
+                                isGooglePlacesMenuExpanded = googlePlaces.isNotEmpty()
+
+                            } catch (e: Exception) {
+                                googlePlaces = emptyList()
+
+                                Log.e(
+                                    "GoogleIsletmeArama",
+                                    "İşletme aranırken hata oluştu: ${e.localizedMessage}",
+                                    e
+                                )
+                            } finally {
+                                isGooglePlacesLoading = false
+                            }
+                        }
+                    } else {
+                        Log.e(
+                            "GoogleIsletmeArama",
+                            "İşletme adı boş veya GPS konumu henüz alınamadı."
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                enabled = !isGooglePlacesLoading
+            ) {
+                if (isGooglePlacesLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Google'da aranıyor...")
+                } else {
+                    Text("Google Maps'te Ara")
+                }
+            }
+
+            DropdownMenu(
+                expanded = isGooglePlacesMenuExpanded,
+                onDismissRequest = {
+                    isGooglePlacesMenuExpanded = false
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                googlePlaces.forEach { place ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(
+                                    text = place.name,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Text(
+                                    text = place.address ?: "Adres bilgisi bulunamadı",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        },
+                        onClick = {
+                            selectedGooglePlace = place
+                            selectedBusiness = null
+                            businessName = place.name
+                            address = place.address ?: ""
+                            isGooglePlacesMenuExpanded = false
+                        }
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 

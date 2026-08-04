@@ -15,6 +15,7 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.Response
 import retrofit2.http.DELETE
+import retrofit2.http.Query
 
 
 interface ZabitaApi {
@@ -26,6 +27,18 @@ interface ZabitaApi {
     // 04.08.2026 eklendi
     @GET("businesses/")
     suspend fun getBusinesses(): List<BusinessResponse>
+
+    // 04.08.2026
+// Yazılan işletme adını mevcut konuma göre Google Maps üzerinde arar.
+    @GET("businesses/search")
+    suspend fun searchGooglePlaces(
+        // Kullanıcının arama alanına yazdığı işletme adı.
+        @Query("query") query: String,
+
+        // Telefonun mevcut GPS konumu.
+        @Query("latitude") latitude: Double,
+        @Query("longitude") longitude: Double
+    ): List<GooglePlaceResponse>
 
     // denetimi yapay zekayla tamamlamak için.
 
@@ -65,7 +78,7 @@ interface ZabitaApi {
     // arayüz google yorumlarıu için
     @GET("/inspections/businesses/{businessId}/reviews")
     suspend fun getBusinessReviews(
-        @Path("business_id") businessId: Int
+        @Path("businessId") businessId: Int
     ): List<ReviewResponse>
 
 }
