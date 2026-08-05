@@ -36,6 +36,13 @@ fun InspectionDetailScreen(
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
 
 
+    // 05.08.2026
+    // yapay zeka raporu yeniden oluşturulurken yüklenme durumunu takip et
+    val isRetryingAi by viewModel.isRetryingAi.collectAsState()
+
+    // yeniden deneme sonucunda oluşsan mesaj
+    val retryAiMessage by viewModel.retryAiMessage.collectAsState()
+
     LaunchedEffect(inspectionId) {
         viewModel.fetchInspections()
     }
@@ -187,6 +194,35 @@ fun InspectionDetailScreen(
                         )
                     }
                 }
+                // 05.08.2026
+                // yeniden deneme butonu
+                if(
+                    inspection.aiSummary.isNullOrBlank() ||
+                    inspection.status == "AI Analizi bekleniyor"
+                ) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.retryAiReport(inspection.id)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isRetryingAi
+                    ) {
+                        if(isRetryingAi) {
+                            CircularProgressIndicator(
+                                modifier =  Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Yapay zeka yeniden deniyor...")
+                        } else {
+                            Text("Yapay Zeka Raporunu Yeniden Dene")
+                        }
+                    }
+                }
+                
 
                 Spacer(modifier = Modifier.height(24.dp))
             }

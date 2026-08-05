@@ -21,6 +21,6 @@ data class BusinessResponse(
     @SerializedName("contact_info")
     val contactInfo: String?,
 
-    @SerializedName("crated_at")
+    @SerializedName("created_at")
     val createdAt: String?
 )

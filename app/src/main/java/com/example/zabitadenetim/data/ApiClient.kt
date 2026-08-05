@@ -5,7 +5,6 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.sql.Time
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
@@ -40,8 +39,9 @@ object ApiClient {
     private val client = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
         .connectTimeout(60, TimeUnit.SECONDS) // 60 sn bekle
-        .readTimeout(60, TimeUnit.SECONDS)  // veriyi okuömak için de 60 sn bekle
+        .readTimeout(120, TimeUnit.SECONDS)  // veriyi okuömak için de 60 sn bekle
         .writeTimeout(60, TimeUnit.SECONDS) // VERİYİ GÖNDERMEK İÇİN DE 60 SN BEKLE
+        .callTimeout(120, TimeUnit.SECONDS)
         .build()
 
 

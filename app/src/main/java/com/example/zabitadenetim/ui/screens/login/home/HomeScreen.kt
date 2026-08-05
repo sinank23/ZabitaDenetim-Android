@@ -160,28 +160,39 @@ fun HomeScreen(
                                 Column(modifier = Modifier.weight(1f).padding(16.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.Top
                                     ) {
+                                        // İşletme adı kalan alanı kullanır ve en fazla 2 satır görünür.
                                         Text(
-                                            text = inspection.businessName ?: "İşletme adı yok",                                            style = MaterialTheme.typography.titleLarge,
-                                            color = MaterialTheme.colorScheme.primary
+                                            text = inspection.businessName ?: "İşletme adı yok",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            maxLines = 2,
+                                            modifier = Modifier.weight(1f)
                                         )
 
-                                        Text(
-                                            text = if (!inspection.inspectionDate.isNullOrEmpty()) {
-                                                inspection.inspectionDate.take(10)
-                                            } else {
-                                                "Tarih yok"
-                                            },
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            text = "Denetim #${inspection.id}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        // Tarih ve denetim numarası sağ tarafta alt alta gösterilir.
+                                        Column(
+                                            horizontalAlignment = Alignment.End
+                                        ) {
+                                            Text(
+                                                text = if (!inspection.inspectionDate.isNullOrEmpty()) {
+                                                    inspection.inspectionDate.take(10)
+                                                } else {
+                                                    "Tarih yok"
+                                                },
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+
+                                            Text(
+                                                text = "Denetim #${inspection.id}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
 
                                     Spacer(modifier = Modifier.height(8.dp))

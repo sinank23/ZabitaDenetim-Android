@@ -28,6 +28,13 @@ interface ZabitaApi {
     @GET("businesses/")
     suspend fun getBusinesses(): List<BusinessResponse>
 
+    //05.08.2026
+    // seçilen işletmeyi veritabanına kaydetme işlemi
+    @POST("businesses/")
+    suspend fun createBusiness(
+        @Body request: BusinessCreateRequest
+    ): BusinessResponse
+
     // 04.08.2026
 // Yazılan işletme adını mevcut konuma göre Google Maps üzerinde arar.
     @GET("businesses/search")
@@ -73,6 +80,15 @@ interface ZabitaApi {
     suspend fun deleteInspection(
         @Path("inspection_id") inspectionId: Int
     ): retrofit2.Response<Unit>
+
+
+    //05.08.2026
+    // işletmenin google yorumlarını backend üzerinden çek
+    @POST("businesses/{businessId}/sync-reviews")
+    suspend fun syncBusinessReviews(
+        @Path("businessId") businessId: Int
+    ): ResponseBody
+
 
     // 03.08.2026
     // arayüz google yorumlarıu için

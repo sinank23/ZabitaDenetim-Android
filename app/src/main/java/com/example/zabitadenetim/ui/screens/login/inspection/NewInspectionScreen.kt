@@ -29,6 +29,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -50,9 +52,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.example.zabitadenetim.data.ApiClient
+import com.example.zabitadenetim.data.BusinessCreateRequest
+import com.example.zabitadenetim.data.GooglePlaceResponse
 import com.example.zabitadenetim.ui.model.InspectionRequest
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
@@ -63,13 +68,6 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import com.example.zabitadenetim.data.BusinessResponse
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.DropdownMenu
-import com.example.zabitadenetim.data.GooglePlaceResponse
-import androidx.compose.ui.text.font.FontWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,36 +95,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
     }
 
     //04.08.2026
-    var businesses by remember {
-        mutableStateOf<List<BusinessResponse>>(emptyList())
-    }
-
-    var selectedBusiness by remember {
-        mutableStateOf<BusinessResponse?>(null)
-    }
-
-    var isBusinessMenuExpanded by remember {
-        mutableStateOf(false)
-    }
-
-    var isBusinessesLoading by remember {
-        mutableStateOf(false)
-    }
     //04.08.2026v
-    LaunchedEffect(Unit) {
-        isBusinessesLoading = true
-
-        try {
-            businesses = ApiClient.apiService.getBusinesses()
-        } catch (e: Exception) {
-            Log.e(
-                "IsletmeListesi",
-                "İşletmeler alınamadı: ${e.localizedMessage}"
-            )
-        } finally {
-            isBusinessesLoading = false
-        }
-    }
 
     // zabıta notu modülü
     var inspectorNotes by remember { mutableStateOf("") }
@@ -138,7 +107,9 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
 
     //lokasyon gps sensörü için client
-    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val fusedLocationClient = remember {
+        LocationServices.getFusedLocationProviderClient(context)
+    }
 
     var currentLatitude by remember { mutableStateOf<Double?>(null) }
     var currentLongitude by remember { mutableStateOf<Double?>(null) }
@@ -146,8 +117,10 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
-            val isFineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
-            val isCoarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            val isFineGranted =
+                permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+            val isCoarseGranted =
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
             if (isFineGranted || isCoarseGranted) {
                 try {
@@ -175,32 +148,29 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
     }
 
     // seçilen fotoğrafların urlelerini tutalım.
-    var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
-
+    var selectedImageUris by remember {
+        mutableStateOf<List<Uri>>(emptyList())
+    }
 
     // kameraya erişim için launcher ve state
     var cameraUri by remember { mutableStateOf(Uri.EMPTY) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
-
     ) { success ->
         if (success) {
             // eğer çekim başarılıysa o anki cameraurisini lsteye ekle
             selectedImageUris = selectedImageUris + cameraUri
         }
-
     }
 
     // galeriyi açmak ve çoklu seçim yapack olan launcher
     val multiplePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
-
     ) { uris ->
         if (uris.isNotEmpty()) {
             selectedImageUris = uris
         }
-
     }
 
     // YENİ EKLENDİ (AI): Yapay Zeka Raporu için durum yöneticileri
@@ -266,65 +236,16 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            if (isBusinessesLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            } else {
-                ExposedDropdownMenuBox(
-                    expanded = isBusinessMenuExpanded,
-                    onExpandedChange = {
-                        isBusinessMenuExpanded = !isBusinessMenuExpanded
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = selectedBusiness?.name ?: "Kayıtlı işletme seç",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Kayıtlı İşletmeler") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = isBusinessMenuExpanded
-                            )
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-
-                    DropdownMenu(
-                        expanded = isBusinessMenuExpanded,
-                        onDismissRequest = {
-                            isBusinessMenuExpanded = false
-                        }
-                    ) {
-                        businesses.forEach { business ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(business.name)
-                                },
-                                onClick = {
-                                    selectedBusiness = business
-                                    businessName = business.name
-                                    address = business.address ?: ""
-                                    isBusinessMenuExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
             OutlinedTextField(
                 value = businessName,
-                onValueChange = { businessName = it },
+                onValueChange = {
+                    businessName = it
+                    selectedGooglePlace = null
+                },
                 label = { Text("İşletme Adı") },
                 modifier = Modifier.fillMaxWidth()
             )
+
             // 04.08.2026
 // Yazılan işletme adını telefonun mevcut konumuna göre Google Maps'te arar.
             Button(
@@ -351,11 +272,12 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
                             try {
                                 // İşletme adı ve telefonun konumu backend'e gönderiliyor.
-                                googlePlaces = ApiClient.apiService.searchGooglePlaces(
-                                    query = businessName,
-                                    latitude = latitude,
-                                    longitude = longitude
-                                )
+                                googlePlaces =
+                                    ApiClient.apiService.searchGooglePlaces(
+                                        query = businessName,
+                                        latitude = latitude,
+                                        longitude = longitude
+                                    )
 
                                 Log.d(
                                     "GoogleIsletmeArama",
@@ -363,7 +285,8 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                 )
 
                                 // Sonuç varsa seçim menüsünü açıyoruz.
-                                isGooglePlacesMenuExpanded = googlePlaces.isNotEmpty()
+                                isGooglePlacesMenuExpanded =
+                                    googlePlaces.isNotEmpty()
 
                             } catch (e: Exception) {
                                 googlePlaces = emptyList()
@@ -420,14 +343,14 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                 )
 
                                 Text(
-                                    text = place.address ?: "Adres bilgisi bulunamadı",
+                                    text = place.address
+                                        ?: "Adres bilgisi bulunamadı",
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
                         },
                         onClick = {
                             selectedGooglePlace = place
-                            selectedBusiness = null
                             businessName = place.name
                             address = place.address ?: ""
                             isGooglePlacesMenuExpanded = false
@@ -470,6 +393,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                             questionStates[index] = isChecked
                         }
                     )
+
                     Text(
                         text = question,
                         style = MaterialTheme.typography.bodyMedium,
@@ -480,16 +404,15 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
             // 30.07.2026 eklendi zabıta notu modülü
             Spacer(modifier = Modifier.height(16.dp))
+
             OutlinedTextField(
                 value = inspectorNotes,
-                onValueChange = {inspectorNotes = it},
-                label = { Text("Zabıta Gözelm ve Notları")},
+                onValueChange = { inspectorNotes = it },
+                label = { Text("Zabıta Gözelm ve Notları") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 maxLines = 5
             )
-
-
 
             // foto seçim arayüzü
             Spacer(modifier = Modifier.height(32.dp))
@@ -499,7 +422,6 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                 text = "Denetim Fotoğrafları",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.align(Alignment.Start)
-
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -512,20 +434,22 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                 Button(
                     onClick = {
                         multiplePhotoPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
                         )
                     },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Galeri")
-
                 }
 
                 Button(
                     onClick = {
                         // kamerayı açmadan boş bir dosya yolu oluştur.
                         val uri = createImageUri(context)
-                        if(uri != null) {
+
+                        if (uri != null) {
                             cameraUri = uri
                             cameraLauncher.launch(uri)
                         }
@@ -551,71 +475,152 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
             Button(
                 onClick = {
-                    if (businessName.isNotBlank() && address.isNotBlank()) {
-                        val requestData = InspectionRequest(
-                            businessName = businessName,
-                            address = address,
-                            answers = questionStates.toList(),
-                            inspector_notes = inspectorNotes,
-                            business_id = selectedBusiness?.id,
-                            // 0959 - Eksik olan notlar eklendi
-                            latitude = currentLatitude, // 0959 - State'ten gelen güncel enlem eklendi,
-                            // 0959 - State'ten gelen güncel enlem eklendi
-                            longitude = currentLongitude
-                        )
-
+                    if (
+                        businessName.isNotBlank() &&
+                        address.isNotBlank() &&
+                        selectedGooglePlace != null
+                    ) {
                         coroutineScope.launch {
                             try {
                                 isAiLoading = true
 
+                                // Google Maps'ten bir işletme seçildiyse önce backend'e kaydediyoruz.
+// İşletme daha önce kayıtlıysa backend mevcut kaydı geri döndürür.
+                                val googlePlace = selectedGooglePlace!!
+
+                                val createdBusiness =
+                                    ApiClient.apiService.createBusiness(
+                                        BusinessCreateRequest(
+                                            name = googlePlace.name,
+
+                                            // Şimdilik restoran kategorisi için mevcut kategori ID'sini kullanıyoruz.
+                                            categoryId = 1,
+
+                                            address = googlePlace.address,
+                                            latitude = googlePlace.latitude,
+                                            longitude = googlePlace.longitude,
+                                            ownerName = null,
+                                            contactInfo = null,
+                                            googlePlaceId = googlePlace.placeId
+                                        )
+                                    )
+
+                                Log.d(
+                                    "DenetimKayit",
+                                    "Google işletmesi kaydedildi. İşletme ID: ${createdBusiness.id}"
+                                )
+
+                                val businessId = createdBusiness.id
+
+                                // işletmenin google yorumlarını denetimden önce güncelle
+                                try {
+                                    ApiClient.apiService
+                                        .syncBusinessReviews(businessId)
+
+                                    Log.d(
+                                        "DenetimKayit",
+                                        "Google yorumları eşitlendi. İşletme ID: $businessId"
+                                    )
+
+                                } catch (e: Exception) {
+                                    Log.e(
+                                        "DenetimKayit",
+                                        "Google yorumları eşitlenemedi: ${e.localizedMessage}",
+                                        e
+                                    )
+                                }
+
+// İşletme kaydı tamamlandıktan sonra denetim isteğini oluşturuyoruz.
+                                val requestData = InspectionRequest(
+                                    businessName = businessName,
+                                    address = address,
+                                    answers = questionStates.toList(),
+                                    inspector_notes = inspectorNotes,
+                                    business_id = businessId,
+                                    // 0959 - Eksik olan notlar eklendi
+                                    latitude = currentLatitude, // 0959 - State'ten gelen güncel enlem eklendi,
+                                    // 0959 - State'ten gelen güncel enlem eklendi
+                                    longitude = currentLongitude
+                                )
+
                                 // 1. Aşama: Metinleri Kaydet
-                                val response = ApiClient.apiService.createInspection(requestData)
-                                Log.d("DenetimKayit", "Kayıt Başarılı!")
+                                val response =
+                                    ApiClient.apiService
+                                        .createInspection(requestData)
+
+                                Log.d(
+                                    "DenetimKayit",
+                                    "Kayıt Başarılı!"
+                                )
 
                                 // 2. Aşama: Fotoğrafları Gönder ve Analiz Et
                                 if (selectedImageUris.isNotEmpty()) {
-                                    val multipartParts = selectedImageUris.mapNotNull { uri ->
-                                        prepareFilePart(context, uri)
-                                    }
+                                    val multipartParts =
+                                        selectedImageUris.mapNotNull { uri ->
+                                            prepareFilePart(context, uri)
+                                        }
 
                                     if (multipartParts.isNotEmpty()) {
                                         multipartParts.forEach { photoPart ->
-                                            ApiClient.apiService.uploadInspectionPhoto(
-                                                response.id,
-                                                photoPart
-                                            )
+                                            ApiClient.apiService
+                                                .uploadInspectionPhoto(
+                                                    response.id,
+                                                    photoPart
+                                                )
                                         }
 
-                                        Log.d("DenetimKayit", "Fotoğraflar başarıyla gönderildi")
+                                        Log.d(
+                                            "DenetimKayit",
+                                            "Fotoğraflar başarıyla gönderildi"
+                                        )
                                     }
                                 }
 
                                 // 3. Aşama: Nihai Raporu İste (YENİ GÜNCELLEME)
-                                val aiResponse = ApiClient.apiService.completeInspection(response.id)
+                                val aiResponse =
+                                    ApiClient.apiService
+                                        .completeInspection(response.id)
 
-                                if (aiResponse.isSuccessful && aiResponse.body() != null) {
-                                    aiReportText = aiResponse.body()!!.aiReport
-                                    showAiReportDialog = true // Başarılıysa raporu göster
+                                if (
+                                    aiResponse.isSuccessful &&
+                                    aiResponse.body() != null
+                                ) {
+                                    aiReportText =
+                                        aiResponse.body()!!.aiReport
+
+                                    showAiReportDialog =
+                                        true // Başarılıysa raporu göster
                                 } else {
                                     // Sunucudan 404, 500 gibi bir hata dönerse ana ekrana atma, hatayı ekrana bas!
-                                    aiReportText = "Sunucu Hatası (Kod: ${aiResponse.code()})\nDetay: ${aiResponse.errorBody()?.string()}"
+                                    aiReportText =
+                                        "Sunucu Hatası (Kod: ${aiResponse.code()})\nDetay: ${aiResponse.errorBody()?.string()}"
+
                                     showAiReportDialog = true
                                 }
 
                             } catch (e: retrofit2.HttpException) {
                                 // HTTP bağlantı kopması olursa ekranda göster
-                                aiReportText = "Bağlantı (HTTP) Hatası:\n${e.response()?.errorBody()?.string()}"
+                                aiReportText =
+                                    "Bağlantı (HTTP) Hatası:\n${e.response()?.errorBody()?.string()}"
+
                                 showAiReportDialog = true
+
                             } catch (e: Exception) {
                                 // Timeout (Zaman Aşımı) veya çökme olursa ekranda göster
-                                aiReportText = "İşlem Hatası (Muhtemelen Zaman Aşımı):\n${e.localizedMessage}"
+                                aiReportText =
+                                    "İşlem Hatası (Muhtemelen Zaman Aşımı):\n${e.localizedMessage}"
+
                                 showAiReportDialog = true
+
                             } finally {
                                 isAiLoading = false
                             }
                         }
                     } else {
-                        Log.e("DenetimKayit", "HATA: İşletme adı veya adres boş bırakılamaz!")
+                        Log.e(
+                            "DenetimKayit",
+                            "HATA: İşletme adı veya adres boş bırakılamaz!"
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -629,14 +634,13 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Yapay zeka analiz ediyor...")
 
-                } else{
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text("Yapay zeka analiz ediyor...")
+                } else {
                     Text("Denetimi Kaydet")
                 }
-
-
 
                 // YENİ EKLENDİ (AI): Yükleme esnasında butonun yazısını değişti
             }
@@ -647,7 +651,9 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
         // YENİ EKLENDİ (AI): Yapay Zeka Raporunu Gösteren Açılır Pencere
         if (showAiReportDialog) {
             androidx.compose.material3.AlertDialog(
-                onDismissRequest = { /* Boşluğa tıklayınca kapanmasın, butona basması zorunlu olsun */ },
+                onDismissRequest = {
+                    /* Boşluğa tıklayınca kapanmasın, butona basması zorunlu olsun */
+                },
                 title = {
                     Text(
                         text = "Yapay Zeka Değerlendirme Raporu",
@@ -656,7 +662,11 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                     )
                 },
                 text = {
-                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Column(
+                        modifier = Modifier.verticalScroll(
+                            rememberScrollState()
+                        )
+                    ) {
                         Text(text = aiReportText)
                     }
                 },
@@ -672,7 +682,6 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                 }
             )
         }
-
     }
 }
 
@@ -681,13 +690,23 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 // Bu fonksiyonu dosyanın en altına, NewInspectionScreen'in dışına ekliyoruz.
 // ---------------------------------------------------------
 
-
 // 1. Kameranın çekeceği fotoğraf için geçici dosya (URI) oluşturan fonksiyon
 fun createImageUri(context: Context): Uri? {
-    val timestamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val timestamp: String =
+        SimpleDateFormat(
+            "yyyyMMdd_HHmmss",
+            Locale.getDefault()
+        ).format(Date())
+
     val imageFileName = "JPEG_${timestamp}_"
     val storageDir: File = context.cacheDir
-    val imageFile = File.createTempFile(imageFileName, ".jpg", storageDir)
+
+    val imageFile =
+        File.createTempFile(
+            imageFileName,
+            ".jpg",
+            storageDir
+        )
 
     return FileProvider.getUriForFile(
         context,
@@ -702,17 +721,24 @@ fun prepareFilePart(
 ): MultipartBody.Part? {
     return try {
         // Dosyayı okumak için bir kanal açıyoruz
-        val inputStream = context.contentResolver.openInputStream(fileUri)
-        val bytes = inputStream?.readBytes() // Dosyayı baytlara çevir
+        val inputStream =
+            context.contentResolver.openInputStream(fileUri)
+
+        val bytes =
+            inputStream?.readBytes() // Dosyayı baytlara çevir
+
         inputStream?.close()
 
         if (bytes != null) {
             // Sunucuya gidecek rastgele bir dosya adı oluştur
-            val fileName = "photo_${System.currentTimeMillis()}.jpg"
+            val fileName =
+                "photo_${System.currentTimeMillis()}.jpg"
 
             // Baytları RequestBody formatına çevir
             val requestFile =
-                bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+                bytes.toRequestBody(
+                    "image/jpeg".toMediaTypeOrNull()
+                )
 
             // Retrofit'in backend'de eşleştireceği "files" anahtarı (FastAPI'deki parametre ismi ile AYNI olmalı)
             MultipartBody.Part.createFormData(
@@ -728,6 +754,7 @@ fun prepareFilePart(
             "DenetimKayit",
             "Fotoğraf dönüştürme hatası: ${e.localizedMessage}"
         )
+
         null
     }
 }

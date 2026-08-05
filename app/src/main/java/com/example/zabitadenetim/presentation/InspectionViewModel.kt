@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class InspectionViewModel : ViewModel() {
 
@@ -69,6 +70,46 @@ class InspectionViewModel : ViewModel() {
             } finally {
                 _isLoadingReviews.value = false
 
+            }
+        }
+    }
+
+    // 05.08.2026
+    // yapay zeka raporu yeniden oluşturulurken bekleme durumunu tut
+    private val _isRetryingAi = MutableStateFlow(false)
+    val isRetryingAi: StateFlow<Boolean> = _isRetryingAi.asStateFlow()
+
+    // kullanıcı mesajı
+    private val _retryAiMessage = MutableStateFlow<String?>(null)
+    val retryAiMessage: StateFlow<String?> = _retryAiMessage.asStateFlow()
+
+    // yapay zeka raporunu tekrar oluşturt
+    fun retryAiReport(inspectionId: Int) {
+        viewModelScope.launch {
+            _isRetryingAi.value = true
+            _retryAiMessage.value = null
+
+            try {
+                val response = apiService.completeInspection(inspectionId)
+
+                if(response.isSuccessful) {
+                    _retryAiMessage.value = "Yapay zeka raporu başarıyla oluşturuldu."
+
+                    fetchInspections()
+                } else {
+                    _retryAiMessage.value = "Rapor oluşturulamadı. Sunucu kodu: ${response.code()}"
+
+                }
+            } catch (e: Exception) {
+                _retryAiMessage.value = "Yapay zeka raporu yeninden oluşturulamadı: ${e.localizedMessage}"
+
+                Log.e(
+                    "AiYenidenDeneme",
+                    "Yapay zeka raporu yeniden oluşturulurken hata oluştu.",
+                    e
+                )
+            } finally {
+                _isRetryingAi.value = false
             }
         }
     }
