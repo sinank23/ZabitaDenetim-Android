@@ -70,6 +70,13 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
+import coil.compose.AsyncImage
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.layout.ContentScale
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -268,16 +275,20 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                     )
 
                     // Arama yapabilmek için işletme adı ve GPS bilgileri hazır olmalı.
-                    if (
-                        businessName.isNotBlank() &&
-                        latitude != null &&
-                        longitude != null
-                    ) {
+                    // Google Maps araması için yalnızca işletme adının yazılması yeterlidir.
+                    if (businessName.isNotBlank()) {
                         coroutineScope.launch {
                             isGooglePlacesLoading = true
 
                             try {
                                 // İşletme adı ve telefonun konumu backend'e gönderiliyor.
+                                if (latitude == null || longitude == null) {
+                                    snackbarHostState.showSnackbar(
+                                        message = "Konum bilgisi henüz alınamadı. Lütfen birkaç saniye sonra tekrar deneyin."
+                                    )
+                                    return@launch
+                                }
+
                                 googlePlaces =
                                     ApiClient.apiService.searchGooglePlaces(
                                         query = businessName,
@@ -290,27 +301,46 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                     "${googlePlaces.size} işletme bulundu."
                                 )
 
-                                // Sonuç varsa seçim menüsünü açıyoruz.
-                                isGooglePlacesMenuExpanded =
-                                    googlePlaces.isNotEmpty()
+                                // 06.08.2026
+                                if (googlePlaces.isNotEmpty()) {
+                                    isGooglePlacesMenuExpanded = true
+                                } else {
+                                    isGooglePlacesMenuExpanded = false
+
+                                    snackbarHostState.showSnackbar(
+                                        message = "Bu isimle yakınlarda bir işletme bulunamadı."
+                                    )
+                                }
+
 
                             } catch (e: Exception) {
                                 googlePlaces = emptyList()
+                                isGooglePlacesMenuExpanded = false
 
                                 Log.e(
                                     "GoogleIsletmeArama",
                                     "İşletme aranırken hata oluştu: ${e.localizedMessage}",
                                     e
                                 )
-                            } finally {
+
+                                snackbarHostState.showSnackbar(
+                                    message = "İşletme aranırken bağlantı hatası oluştu. Lütfen tekrar deneyin."
+                                )
+                            }finally {
                                 isGooglePlacesLoading = false
                             }
                         }
                     } else {
                         Log.e(
                             "GoogleIsletmeArama",
-                            "İşletme adı boş veya GPS konumu henüz alınamadı."
+                            "İşletme adı boş bırakıldı."
                         )
+
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Lütfen aramak istediğiniz işletmenin adını yazın."
+                            )
+                        }
                     }
                 },
                 modifier = Modifier
@@ -393,11 +423,22 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(
+                    //06.08.2026
+                    // checkooboxu evet hayır şekline çevirdik
+                    Switch(
                         checked = questionStates[index],
                         onCheckedChange = { isChecked ->
                             questionStates[index] = isChecked
+
                         }
+                    )
+                    Text(
+                        text = if (questionStates[index]) "Evet" else "Hayır",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .width(40.dp)
                     )
 
                     Text(
@@ -453,8 +494,9 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                 Button(
                     onClick = {
                         // kamerayı açmadan boş bir dosya yolu oluştur.
-                        val uri = createImageUri(context)
+                        val uri =
 
+                            createImageUri(context)
                         if (uri != null) {
                             cameraUri = uri
                             cameraLauncher.launch(uri)
@@ -473,6 +515,43 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                     color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.padding(top = 8.dp)
                 )
+
+                //06.08.2026
+                // fotoğrafları ekranda görüp kaydrıma modülü ekleyelim
+
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    selectedImageUris.forEach { imageUri ->
+                        Box(
+                            modifier = Modifier.size(120.dp)
+                        ) {
+                            AsyncImage(
+                                model = imageUri,
+                                contentDescription = "Seçilen denetim fotoğrafı",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    selectedImageUris =
+                                        selectedImageUris.filterNot { it == imageUri }
+                                },
+                                modifier = Modifier.align(Alignment.TopEnd)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Fotoğrafı kaldır"
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             // fotoğraf seçme arayüzünün sonu
@@ -484,7 +563,8 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                     if (
                         businessName.isNotBlank() &&
                         address.isNotBlank() &&
-                        selectedGooglePlace != null
+                        selectedGooglePlace != null &&
+                        selectedImageUris.isNotEmpty()
                     ) {
                         coroutineScope.launch {
                             try {
@@ -623,14 +703,25 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                             }
                         }
                     } else {
+                        val errorMessage =
+                            if (
+                                selectedGooglePlace == null ||
+                                businessName.isBlank() ||
+                                address.isBlank()
+                            ) {
+                                "Lütfen önce Google Maps sonuçlarından bir işletme seçin."
+                            } else {
+                                "Lütfen denetim için en az bir fotoğraf seçin."
+                            }
+
                         Log.e(
                             "DenetimKayit",
-                            "HATA: Google Maps sonuçlarından bir işletme seçilmedi!"
+                            "HATA: $errorMessage"
                         )
 
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar(
-                                message = "Lütfen önce Google Maps sonuçlarından bir işletme seçin."
+                                message = errorMessage
                             )
                         }
                     }
