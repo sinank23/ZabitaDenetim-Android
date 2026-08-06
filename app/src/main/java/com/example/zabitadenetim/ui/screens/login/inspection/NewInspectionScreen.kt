@@ -38,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -68,6 +69,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material3.SnackbarHostState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,6 +104,8 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // dosyaları okuyabilmek için uygulama bağlamını alalım (28.07.2026)
     val context = LocalContext.current
@@ -209,6 +213,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Yeni Denetim") },
@@ -220,6 +225,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                         )
                     }
                 },
+
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -619,8 +625,14 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                     } else {
                         Log.e(
                             "DenetimKayit",
-                            "HATA: İşletme adı veya adres boş bırakılamaz!"
+                            "HATA: Google Maps sonuçlarından bir işletme seçilmedi!"
                         )
+
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Lütfen önce Google Maps sonuçlarından bir işletme seçin."
+                            )
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
