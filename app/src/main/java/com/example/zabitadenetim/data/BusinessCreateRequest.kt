@@ -20,6 +20,7 @@ data class BusinessCreateRequest(
     @SerializedName("owner_name")
     val ownerName: String? = null,
 
+    @SerializedName("contact_info")
     val contactInfo: String? = null,
 
     @SerializedName("google_place_id")

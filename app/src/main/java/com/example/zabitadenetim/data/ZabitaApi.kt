@@ -97,4 +97,13 @@ interface ZabitaApi {
         @Path("businessId") businessId: Int
     ): List<ReviewResponse>
 
+    //07.08.2026
+    @GET("businesses/categories/all")
+    suspend fun getBusinessCategories(): List<BusinessCategoryResponse>
+
+    @GET("inspections/criteria/{category_id}")
+    suspend fun getInspectionCriteria(
+        @Path("category_id") categoryId: Int
+    ): List<InspectionCriterionResponse>
+
 }

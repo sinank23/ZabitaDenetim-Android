@@ -76,7 +76,10 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.layout.ContentScale
-
+import com.example.zabitadenetim.data.BusinessCategoryResponse
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import com.example.zabitadenetim.data.InspectionCriterionResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +87,10 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
     var businessName by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+
+    // 07.08.2026 eklendi işletme bilgileri ve işletme sahibi bilgileri
+    var ownerName by remember { mutableStateOf("") }
+    var contactInfo by remember { mutableStateOf("") }
 
     // google aramasından dönen işletmeleri tut
     var googlePlaces by remember {
@@ -103,8 +110,21 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
         mutableStateOf(false)
     }
 
-    //04.08.2026
-    //04.08.2026v
+    var businessCategories by remember {
+        mutableStateOf<List<BusinessCategoryResponse>>(emptyList())
+
+    }
+
+    var inspectionCriteria by remember {
+        mutableStateOf<List<InspectionCriterionResponse>>(emptyList())
+    }
+
+    var isBusinessCategoryMenuExpanded by remember {
+        mutableStateOf(false)
+    }
+    var selectedBusinessCategory by remember {
+        mutableStateOf<BusinessCategoryResponse?>(null)
+    }
 
     // zabıta notu modülü
     var inspectorNotes by remember { mutableStateOf("") }
@@ -156,6 +176,26 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             )
         )
+    }
+
+    //07.08.2026 kategoriler için
+    LaunchedEffect(Unit) {
+        try {
+            businessCategories =
+                ApiClient.apiService.getBusinessCategories()
+
+            Log.d(
+                "IsletmeKategori",
+                "${businessCategories.size} kategori yüklendi"
+            )
+        } catch (e: Exception) {
+            Log.e(
+                "IsletmeKategori",
+                "Kategoriler alınırken hata oluştu: ${e.localizedMessage}",
+                e
+            )
+        }
+
     }
 
     // seçilen fotoğrafların urlelerini tutalım.
@@ -405,6 +445,85 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                 minLines = 3
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ExposedDropdownMenuBox(
+                expanded = isBusinessCategoryMenuExpanded,
+                onExpandedChange = {
+                    isBusinessCategoryMenuExpanded = !isBusinessCategoryMenuExpanded
+                }
+            ) {
+                OutlinedTextField(
+                    value = selectedBusinessCategory?.name ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Faaliyet Konusu") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = isBusinessCategoryMenuExpanded
+                        )
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = isBusinessCategoryMenuExpanded,
+                    onDismissRequest = {
+                        isBusinessCategoryMenuExpanded = false
+                    }
+                ) {
+                    businessCategories.forEach { category ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(category.name)
+                            },
+                            onClick = {
+                                selectedBusinessCategory = category
+                                isBusinessCategoryMenuExpanded = false
+
+                                coroutineScope.launch {
+                                    try {
+                                        inspectionCriteria =
+                                            ApiClient.apiService.getInspectionCriteria(category.id)
+
+                                        Log.d(
+                                            "DenetimKriterleri",
+                                            "${inspectionCriteria.size} kriter yüklendi."
+                                        )
+                                    } catch (e: Exception) {
+                                        inspectionCriteria = emptyList()
+
+                                        Log.e(
+                                            "DenetimKriterleri",
+                                            "Kriterler alınırken hata oluştu: ${e.localizedMessage}",
+                                            e
+                                        )
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
+            OutlinedTextField(
+                value = ownerName,
+                onValueChange = { ownerName = it },
+                label = { Text ("İşletme Sahibi Adı Soyadı")},
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = contactInfo,
+                onValueChange = { contactInfo = it },
+                label = { Text("İletişim Bilgisi") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Spacer(modifier = Modifier.height(32.dp))
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -416,6 +535,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+
             inspectionQuestions.forEachIndexed { index, question ->
                 Row(
                     modifier = Modifier
@@ -423,15 +543,13 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    //06.08.2026
-                    // checkooboxu evet hayır şekline çevirdik
                     Switch(
                         checked = questionStates[index],
                         onCheckedChange = { isChecked ->
                             questionStates[index] = isChecked
-
                         }
                     )
+
                     Text(
                         text = if (questionStates[index]) "Evet" else "Hayır",
                         style = MaterialTheme.typography.bodySmall,
@@ -564,6 +682,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                         businessName.isNotBlank() &&
                         address.isNotBlank() &&
                         selectedGooglePlace != null &&
+                        selectedBusinessCategory != null &&
                         selectedImageUris.isNotEmpty()
                     ) {
                         coroutineScope.launch {
@@ -578,15 +697,13 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                     ApiClient.apiService.createBusiness(
                                         BusinessCreateRequest(
                                             name = googlePlace.name,
-
-                                            // Şimdilik restoran kategorisi için mevcut kategori ID'sini kullanıyoruz.
-                                            categoryId = 1,
+                                            categoryId = selectedBusinessCategory!!.id,
 
                                             address = googlePlace.address,
                                             latitude = googlePlace.latitude,
                                             longitude = googlePlace.longitude,
-                                            ownerName = null,
-                                            contactInfo = null,
+                                            ownerName = ownerName.ifBlank { null },
+                                            contactInfo = contactInfo.ifBlank { null },
                                             googlePlaceId = googlePlace.placeId
                                         )
                                     )
@@ -704,14 +821,24 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                         }
                     } else {
                         val errorMessage =
-                            if (
+                            when {
                                 selectedGooglePlace == null ||
                                 businessName.isBlank() ||
-                                address.isBlank()
-                            ) {
-                                "Lütfen önce Google Maps sonuçlarından bir işletme seçin."
-                            } else {
-                                "Lütfen denetim için en az bir fotoğraf seçin."
+                                address.isBlank() -> {
+                                    "Lütfen önce Google Maps sonuçlarından bir işletme seçin."
+                                }
+
+                                selectedBusinessCategory == null -> {
+                                    "Lütfen işletmenin faaliyet konusunu seçin."
+                                }
+
+                                selectedImageUris.isEmpty() -> {
+                                    "Lütfen denetim için en az bir fotoğraf seçin."
+                                }
+
+                                else -> {
+                                    "Denetim kaydı oluşturulamadı."
+                                }
                             }
 
                         Log.e(
