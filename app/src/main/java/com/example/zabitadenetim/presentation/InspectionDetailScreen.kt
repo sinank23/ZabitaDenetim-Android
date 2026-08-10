@@ -34,7 +34,7 @@ fun InspectionDetailScreen(
     // 03.08.2026 eklendi
     val reviews by viewModel.reviews.collectAsState()
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
-
+    val inspectionAnswers by viewModel.inspectionAnswers.collectAsState()
 
     // 05.08.2026
     // yapay zeka raporu yeniden oluşturulurken yüklenme durumunu takip et
@@ -45,6 +45,10 @@ fun InspectionDetailScreen(
 
     LaunchedEffect(inspectionId) {
         viewModel.fetchInspections()
+    }
+
+    LaunchedEffect(inspectionId) {
+        viewModel.fetchInspectionAnswers(inspectionId)
     }
 
     // sayfa açıldığında o işletmenin yorumlarını getir

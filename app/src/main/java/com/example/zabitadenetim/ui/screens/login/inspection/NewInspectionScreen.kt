@@ -80,6 +80,7 @@ import com.example.zabitadenetim.data.BusinessCategoryResponse
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import com.example.zabitadenetim.data.InspectionCriterionResponse
+import com.example.zabitadenetim.ui.model.InspectionAnswerRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -179,6 +180,10 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
     }
 
     //07.08.2026 kategoriler için
+    val questionStates = remember {
+        mutableStateListOf<Boolean>()
+    }
+
     LaunchedEffect(Unit) {
         try {
             businessCategories =
@@ -196,6 +201,26 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
             )
         }
 
+        try {
+            inspectionCriteria =
+                ApiClient.apiService.getCommonInspectionCriteria()
+
+            questionStates.clear()
+            questionStates.addAll(
+                List(inspectionCriteria.size) { false }
+            )
+
+            Log.d(
+                "OrtakDenetimKriterleri",
+                "${inspectionCriteria.size} ortak kriter yüklendi"
+            )
+        } catch (e: Exception) {
+            Log.e(
+                "OrtakDenetimKriterleri",
+                "Ortak kriterler alınırken hata oluştu: ${e.localizedMessage}",
+                e
+            )
+        }
     }
 
     // seçilen fotoğrafların urlelerini tutalım.
@@ -229,35 +254,6 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
     var aiReportText by remember { mutableStateOf("") }
     var isAiLoading by remember { mutableStateOf(false) }
 
-    val inspectionQuestions = listOf(
-        "İşyeri açma ve çalıştırma ruhsatır var mı?",
-        "Yangın tüpü var mı?",
-        "Hijyen belgesi var mı?",
-        "Ecza dolabı var mı?",
-        "İşyerinin detaylı genel temizliği/tertip düzeni uygun mu?",
-        "Periyodik ilaçlama yapılıyor mu",
-        "Fiyat tarifesi var mı",
-        "Personelin maske, eldiven, bone temiz kıyafet ve kişisel bakımı uygun mu?",
-        "Sigara içilmez levhası var mı?",
-        "Kapaklı çöp kovası var mı?",
-        "Ürünlerin son kullanma tarihi satışa uygun mu",
-        "Fiyat tarifesi ile kasa fiyatları uyumlu mu?",
-        "Masalarda fiyat tarifesi var mı?",
-        "Bay/Bayan lavabo var mı?",
-        "Hazırlama, pişirme ve bulaşık yıkama bölümleri ayrı şekilde mi",
-        "Baca filtre sistemi var mı? (Fırını olanlar için)",
-        "Genel havalandırma yapılıyor mu?",
-        "Tuvaletlerde kağıt havlu ve sabun  var mı?",
-        "Gıdalar uygun koşullarda muhafaza ediliyor mu?",
-        "Soğuk zinciri gerektiren ürünler uygun şekilde muhafaza ediliyor mu?",
-        "Diğer"
-    )
-
-    val questionStates = remember {
-        mutableStateListOf<Boolean>().apply {
-            addAll(List(inspectionQuestions.size) { false })
-        }
-    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -482,26 +478,6 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                             onClick = {
                                 selectedBusinessCategory = category
                                 isBusinessCategoryMenuExpanded = false
-
-                                coroutineScope.launch {
-                                    try {
-                                        inspectionCriteria =
-                                            ApiClient.apiService.getInspectionCriteria(category.id)
-
-                                        Log.d(
-                                            "DenetimKriterleri",
-                                            "${inspectionCriteria.size} kriter yüklendi."
-                                        )
-                                    } catch (e: Exception) {
-                                        inspectionCriteria = emptyList()
-
-                                        Log.e(
-                                            "DenetimKriterleri",
-                                            "Kriterler alınırken hata oluştu: ${e.localizedMessage}",
-                                            e
-                                        )
-                                    }
-                                }
                             }
                         )
                     }
@@ -536,7 +512,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
 
-            inspectionQuestions.forEachIndexed { index, question ->
+            inspectionCriteria.forEachIndexed { index, criterion ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -560,7 +536,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                     )
 
                     Text(
-                        text = question,
+                        text = criterion.questionText,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 8.dp)
                     )
@@ -733,11 +709,19 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                     )
                                 }
 
+                                val answerRecords = inspectionCriteria.mapIndexed { index, criterion ->
+                                    InspectionAnswerRequest(
+                                        criterion_id = criterion.id,
+                                        is_yes = questionStates[index]
+                                    )
+                                }
+
 // İşletme kaydı tamamlandıktan sonra denetim isteğini oluşturuyoruz.
                                 val requestData = InspectionRequest(
                                     businessName = businessName,
                                     address = address,
                                     answers = questionStates.toList(),
+                                    answer_records = answerRecords,
                                     inspector_notes = inspectorNotes,
                                     business_id = businessId,
                                     // 0959 - Eksik olan notlar eklendi

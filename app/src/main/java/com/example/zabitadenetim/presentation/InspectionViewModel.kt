@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.zabitadenetim.data.InspectionAnswerResponse
 
 class InspectionViewModel : ViewModel() {
 
@@ -70,6 +71,39 @@ class InspectionViewModel : ViewModel() {
             } finally {
                 _isLoadingReviews.value = false
 
+            }
+        }
+    }
+
+    //10.08.2026: denetime ait soru ve cevaplarını tut
+    private val _inspectionAnswers =
+        MutableStateFlow<List<InspectionAnswerResponse>>(emptyList())
+
+    val inspectionAnswers: StateFlow<List<InspectionAnswerResponse>> =
+        _inspectionAnswers.asStateFlow()
+
+    // denetime ait cevapları fastapiden çekelim
+    fun fetchInspectionAnswers(inspectionId: Int) {
+        viewModelScope.launch {
+            try {
+                val response =
+                    apiService.getInspectionAnswers(inspectionId)
+
+                _inspectionAnswers.value = response
+
+                Log.d(
+                    "DenetimCevaplari",
+                    "${response.size} denetim cevabı yüklendi."
+                )
+
+            } catch (e: Exception) {
+                _inspectionAnswers.value = emptyList()
+
+                Log.e(
+                    "DenetimCevaplari",
+                    "Denetim cevapları alınırken hata oluştu: ${e.localizedMessage}",
+                    e
+                )
             }
         }
     }

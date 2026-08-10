@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName
 data class InspectionCriterionResponse(
     val id: Int,
     @SerializedName("category_id")
-    val categoryId: Int,
+    val categoryId: Int?,   // null değerleri de dinle
     @SerializedName("question_text")
     val questionText: String
 

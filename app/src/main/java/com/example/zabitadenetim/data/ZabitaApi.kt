@@ -106,4 +106,15 @@ interface ZabitaApi {
         @Path("category_id") categoryId: Int
     ): List<InspectionCriterionResponse>
 
+    //10.08.2026
+    // denetim sorularını çekme endpointi eklendi.
+    @GET("inspections/criteria/common/all")
+    suspend fun getCommonInspectionCriteria(): List<InspectionCriterionResponse>
+
+
+    //10.08.2026
+    @GET("inspections/{inspection_id}/answers")
+    suspend fun getInspectionAnswers(
+        @Path("inspection_id") inspectionId: Int
+    ): List<InspectionAnswerResponse>
 }
