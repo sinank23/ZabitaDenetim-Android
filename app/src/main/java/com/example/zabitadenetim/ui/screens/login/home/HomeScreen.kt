@@ -31,6 +31,34 @@ fun HomeScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
+    // 11.08.2026
+    // işletme adına göre denetim arama
+    var searchQuery by remember {
+        mutableStateOf("")
+    }
+
+    var selectedCategory by remember { mutableStateOf("Tümü") }
+
+    var categoryMenuExpanded by remember { mutableStateOf(false) }
+
+    val availableCategories = inspections
+        .mapNotNull { it.categoryName }
+        .distinct()      // faaliyet konularını çıkar
+        .sorted()
+
+    val filteredInspections = inspections.filter { inspection ->
+
+        val matchesSearch =
+            inspection.businessName
+                ?.contains(searchQuery, ignoreCase = true) == true
+
+        val matchesCategory =
+            selectedCategory == "Tümü" ||
+                    inspection.categoryName == selectedCategory
+
+        matchesSearch && matchesCategory
+    }
+
     // YENİ EKLENDİ (SİLME İŞLEMİ): Arka planda silme isteği atmak için coroutine scope
     val coroutineScope = rememberCoroutineScope()
 
@@ -85,6 +113,57 @@ fun HomeScreen(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
 
+
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("İşletme adına göre ara") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        categoryMenuExpanded = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Filtre: $selectedCategory")
+                }
+
+                DropdownMenu(
+                    expanded = categoryMenuExpanded,
+                    onDismissRequest = {
+                        categoryMenuExpanded = false
+                    }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Tümü") },
+                        onClick = {
+                            selectedCategory = "Tümü"
+                            categoryMenuExpanded = false
+                        }
+                    )
+
+                    availableCategories.forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category) },
+                            onClick = {
+                                selectedCategory = category
+                                categoryMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             if (isLoading) {
                 CircularProgressIndicator()
             } else if (errorMessage.isNotEmpty()) {
@@ -97,12 +176,18 @@ fun HomeScreen(
                     text = "Kayıtlı bir denetim yok",
                     style = MaterialTheme.typography.bodyLarge
                 )
+            } else if (filteredInspections.isEmpty()) {
+                Text(
+                    text = "Arama veya filtreye uygun denetim bulunamadı.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(inspections) { inspection ->
+                    items(filteredInspections) { inspection ->
 
                         // YENİ EKLENDİ (SİLME İŞLEMİ): Emin misiniz diyalogu için state
                         var showDialog by remember { mutableStateOf(false) }

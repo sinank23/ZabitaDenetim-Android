@@ -114,13 +114,82 @@ fun InspectionDetailScreen(
                         Text(
                             text = "Adres: ${inspection.address ?: "Belirtilmemiş"}",                            style = MaterialTheme.typography.bodyMedium
                         )
+
+                        // denetimin konusu
+                        Text(
+                            text = "Faaliyet Konusu: ${inspection.categoryName ?: "Belirtilmemiş"}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Durum: ${inspection.status ?: "Bekliyor"}",
                             style = MaterialTheme.typography.bodyMedium
                         )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "İşletme Sahibi: ${inspection.ownerName ?: "Belirtilmemiş"}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "İletişim: ${inspection.contactInfo ?: "Belirtilmemiş"}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                //11.08.2026
+                // denetime ait spru ve cevapları göster
+                Text(
+                    text = "Denetim Soruları ve Cevapları",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (inspectionAnswers.isEmpty()) {
+                    Text(
+                        text = "Bu denetime ait soru-cevap kaydı bulunamadı.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    inspectionAnswers.forEach{ answer ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 2.dp
+                            )
+                        )  {
+                            Column (
+                                modifier = Modifier.padding(12.dp)
+                            ) {
+                                Text(
+                                    text = answer.questionText,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Text(
+                                    text = if (answer.isYes) "Cevap: Evet" else "Cevap: Hayır",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+                }
+
 
                 Spacer(modifier = Modifier.height(24.dp))
 

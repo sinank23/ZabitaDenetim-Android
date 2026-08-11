@@ -21,6 +21,15 @@ data class InspectionResponse(
     @SerializedName("business_id")
     val businessId: Int?,
 
+    @SerializedName("category_name")
+    val categoryName: String?,
+
+    @SerializedName("owner_name")
+    val ownerName: String?,
+
+    @SerializedName("contact_info")
+    val contactInfo: String?,
+
     val status: String?,
 
     @SerializedName("ai_summary")
