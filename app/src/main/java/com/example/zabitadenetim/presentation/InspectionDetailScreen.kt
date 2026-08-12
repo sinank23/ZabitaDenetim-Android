@@ -18,6 +18,11 @@ import com.example.zabitadenetim.presentation.InspectionViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +36,62 @@ fun InspectionDetailScreen(
     // tıklanan denetimin idsini listede arayıp bulduk
     val inspection = viewModel.inspections.value.find { it.id == inspectionId }
 
+    val formattedInspectionDate = inspection?.inspectionDate?.let { date ->
+        try {
+            val datePart = date.substringBefore("T")
+            val timePart = date.substringAfter("T").take(5)
+
+            val dateParts = datePart.split("-")
+
+            if (dateParts.size == 3) {
+                "${dateParts[2]}.${dateParts[1]}.${dateParts[0]} $timePart"
+            } else {
+                date
+            }
+        } catch (e: Exception) {
+            date
+        }
+    }
+
+    //12.08.2026 eklendi
+    // yapay zeka analizini ayrı kartlara bölme işlemi için
+
+    val aiReportSections = inspection?.aiSummary?.let { report ->
+
+        val sectionTitles = listOf(
+            "GENEL_DEGERLENDIRME",
+            "DENETIM_KRITERLERI",
+            "FOTOGRAF_BULGULARI",
+            "GOOGLE YORUMLARI",
+            "ZABITA_NOTU_KARSILASTIRMASI",
+            "TUTARLILIK VE RİSKLER",
+            "ONERILER"
+        )
+
+        sectionTitles.associateWith { currentTitle ->
+            val startTag = "[$currentTitle]"
+            val startIndex = report.indexOf(startTag)
+
+            if (startIndex == -1) {
+                ""
+            } else {
+                val contentStart = startIndex + startTag.length
+
+                val nextSectionIndex = sectionTitles
+                    .map { "[$it]" }
+                    .map { report.indexOf(it, contentStart)}
+                    .filter { it != -1 }
+                    .minOrNull()
+
+                if (nextSectionIndex != null) {
+                    report.substring(contentStart, nextSectionIndex).trim()
+                } else {
+                    report.substring(contentStart).trim()
+                }
+            }
+        }
+    }
+
     // 03.08.2026 eklendi
     val reviews by viewModel.reviews.collectAsState()
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
@@ -42,6 +103,13 @@ fun InspectionDetailScreen(
 
     // yeniden deneme sonucunda oluşsan mesaj
     val retryAiMessage by viewModel.retryAiMessage.collectAsState()
+
+    //12.08.2026 eklendi
+    // zabıta memurunun notunu detay sayfasında görmek için state
+
+    var showInspectorNoteDialog by remember { mutableStateOf(false) }
+
+
 
     LaunchedEffect(inspectionId) {
         viewModel.fetchInspections()
@@ -110,9 +178,26 @@ fun InspectionDetailScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
+
                         Spacer(modifier = Modifier.height(8.dp))
+
                         Text(
-                            text = "Adres: ${inspection.address ?: "Belirtilmemiş"}",                            style = MaterialTheme.typography.bodyMedium
+                            text = "Denetim No: ${inspection.id}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "Denetim Tarihi: ${formattedInspectionDate ?: "Belirtilmemiş"}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "Adres: ${inspection.address ?: "Belirtilmemiş"}",
+                            style = MaterialTheme.typography.bodyMedium
                         )
 
                         // denetimin konusu
@@ -140,6 +225,17 @@ fun InspectionDetailScreen(
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        showInspectorNoteDialog = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Zabıta Personel Notu")
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -251,20 +347,73 @@ fun InspectionDetailScreen(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.secondary
                 )
+
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = inspection.aiSummary
-                                ?: "Bu denetim için henüz yapay zeka raporu oluşturulmamış.",
-                            style = MaterialTheme.typography.bodyLarge
+                if (inspection.aiSummary.isNullOrBlank()) {
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Bu denetim için henüz yapay zeka raporu oluşturulmamış.",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+
+                } else {
+
+                    val reportSections = listOf(
+                        "GENEL_DEGERLENDIRME" to "Genel Değerlendirme",
+                        "DENETIM_KRITERLERI" to "Denetim Kriterleri",
+                        "FOTOGRAF_BULGULARI" to "Fotoğraf Bulguları",
+                        "GOOGLE_YORUMLARI" to "Google Yorumları",
+                        "ZABITA_NOTU_KARSILASTIRMASI" to "Zabıta Notu Karşılaştırması",
+                        "TUTARLILIK_VE_RISKLER" to "Tutarlılık ve Riskler",
+                        "ONERILER" to "Öneriler"
+                    )
+
+                    reportSections.forEach { (key, title) ->
+
+                        val content = aiReportSections?.get(key)
+
+                        if (!content.isNullOrBlank()) {
+
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = 2.dp
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Text(
+                                        text = content,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
                 // 05.08.2026
@@ -295,9 +444,36 @@ fun InspectionDetailScreen(
                         }
                     }
                 }
-                
+
 
                 Spacer(modifier = Modifier.height(24.dp))
+
+                if (showInspectorNoteDialog) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            showInspectorNoteDialog = false
+                        },
+                        title = {
+                            Text("Zabıta Personel Notu")
+                        },
+                        text = {
+                            Text(
+                                text = inspection.notes
+                                    ?.takeIf { it.isNotBlank() }
+                                    ?: "Bu denetim için personel notu girilmemiş."
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showInspectorNoteDialog = false
+                                }
+                            ) {
+                                Text("Kapat")
+                            }
+                        }
+                    )
+                }
             }
         }
     }

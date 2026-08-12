@@ -283,6 +283,13 @@ fun HomeScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     Text(
+                                        text = "Faaliyet Konusu: ${inspection.categoryName ?: "Belirtilmemiş"}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Text(
                                         text = "Durum: ${inspection.status ?: "Bekliyor"}",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold
