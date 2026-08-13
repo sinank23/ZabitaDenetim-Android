@@ -725,9 +725,9 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                     inspector_notes = inspectorNotes,
                                     business_id = businessId,
                                     // 0959 - Eksik olan notlar eklendi
-                                    latitude = currentLatitude, // 0959 - State'ten gelen güncel enlem eklendi,
+                                    latitude = googlePlace.latitude, // 0959 - State'ten gelen güncel enlem eklendi,
                                     // 0959 - State'ten gelen güncel enlem eklendi
-                                    longitude = currentLongitude
+                                    longitude = googlePlace.longitude
                                 )
 
                                 // 1. Aşama: Metinleri Kaydet

@@ -22,6 +22,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+
 
 
 
@@ -33,6 +37,8 @@ fun InspectionDetailScreen(
     viewModel: InspectionViewModel = viewModel()
 
 ) {
+    val context = LocalContext.current
+
     // tıklanan denetimin idsini listede arayıp bulduk
     val inspection = viewModel.inspections.value.find { it.id == inspectionId }
 
@@ -224,6 +230,44 @@ fun InspectionDetailScreen(
                             text = "İletişim: ${inspection.contactInfo ?: "Belirtilmemiş"}",
                             style = MaterialTheme.typography.bodyMedium
                         )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (inspection.latitude != null && inspection.longitude != null) {
+                            OutlinedButton(
+                                onClick = {
+                                    val latitude = inspection.latitude
+                                    val longitude = inspection.longitude
+
+                                    val mapUri = Uri.parse(
+                                        "geo:$latitude,$longitude?q=$latitude,$longitude"
+                                    )
+
+                                    val mapIntent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        mapUri
+                                    )
+
+                                    try {
+                                        context.startActivity(mapIntent)
+                                    } catch (e: Exception) {
+                                        val browseUri = Uri.parse(
+                                            "https://www.google.com/maps/search/?api=1&query=$latitude,$longitude"
+                                        )
+
+                                        val browserIntent = Intent(
+                                            Intent.ACTION_VIEW,
+                                            browseUri
+                                        )
+
+                                        context.startActivity(browserIntent)
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Konumu Haritada Aç")
+                            }
+                        }
                     }
                 }
 
