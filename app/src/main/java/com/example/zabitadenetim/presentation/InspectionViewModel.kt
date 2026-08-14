@@ -75,6 +75,51 @@ class InspectionViewModel : ViewModel() {
         }
     }
 
+    //14.08.2026
+    //seçilen işletmeye ait geçiş denetimleri tut
+    private val _businessInspections =
+        MutableStateFlow<List<InspectionResponse>>(emptyList())
+
+    val businessInspections: StateFlow<List<InspectionResponse>> =
+        _businessInspections.asStateFlow()
+
+    //loading durumu
+    private val _isLoadingBusinessInspections =
+        MutableStateFlow(false)
+
+    val isLoadingBusinessInspections: StateFlow<Boolean> =
+        _isLoadingBusinessInspections.asStateFlow()
+
+    // geçmiş denetimleri backendden çek
+    fun fetchBusinessInspections(businessId: Int) {
+        viewModelScope.launch {
+            _isLoadingBusinessInspections.value = true
+
+            try {
+                val response =
+                    apiService.getBusinessInspections(businessId)
+                _businessInspections.value = response
+
+                Log.d(
+                    "IsletmeDenetimGecmisi",
+                    "${response.size} adet denetim geçmişi yüklendi."
+                )
+
+            } catch (e: Exception) {
+                _businessInspections.value = emptyList()
+
+                Log.e(
+                    "IsletmeDenetimGecmisi",
+                    "Geçmiş denetimler alınırken hata oluştu: ${e.localizedMessage}",
+                    e
+                )
+
+            } finally {
+                _isLoadingBusinessInspections.value = false
+            }
+        }
+    }
+
     //10.08.2026: denetime ait soru ve cevaplarını tut
     private val _inspectionAnswers =
         MutableStateFlow<List<InspectionAnswerResponse>>(emptyList())

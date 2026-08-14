@@ -16,6 +16,7 @@ import retrofit2.http.Path
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 
 interface ZabitaApi {
@@ -117,4 +118,21 @@ interface ZabitaApi {
     suspend fun getInspectionAnswers(
         @Path("inspection_id") inspectionId: Int
     ): List<InspectionAnswerResponse>
+
+    //14.08.2026
+    // deetime ait pdf raporunu backed üzerinden indirme
+    @Streaming
+    @GET("inspections/{inspection_id}/report/pdf")
+    suspend fun getInspectionPdf(
+        @Path("inspection_id") inspectionId: Int
+    ): Response<ResponseBody>
+
+    //14.08.2026
+    // geçmiş denetimleri görme endpointi (aynı işletme)
+
+    @GET("businesses/{businessId}/inspections")
+    suspend fun getBusinessInspections(
+        @Path("businessId") businessId: Int
+    ): List<InspectionResponse>
+
 }

@@ -34,8 +34,9 @@ import androidx.compose.ui.platform.LocalContext
 fun InspectionDetailScreen(
     inspectionId: Int,
     onNavigateBack: () -> Unit,
+    onNavigateToPdf: (Int) -> Unit,
+    onNavigateToBusinessHistory: (Int, Int) -> Unit,
     viewModel: InspectionViewModel = viewModel()
-
 ) {
     val context = LocalContext.current
 
@@ -68,9 +69,9 @@ fun InspectionDetailScreen(
             "GENEL_DEGERLENDIRME",
             "DENETIM_KRITERLERI",
             "FOTOGRAF_BULGULARI",
-            "GOOGLE YORUMLARI",
+            "GOOGLE_YORUMLARI",
             "ZABITA_NOTU_KARSILASTIRMASI",
-            "TUTARLILIK VE RİSKLER",
+            "TUTARLILIK_VE_RISKLER",
             "ONERILER"
         )
 
@@ -266,6 +267,35 @@ fun InspectionDetailScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text("Konumu Haritada Aç")
+                            }
+                        }
+
+                        //14.08.2026 eklendi
+                        // denetime ait PDF raporunu açma modülü ekledik.
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedButton(
+                            onClick = {
+                                onNavigateToPdf(inspection.id)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("PDF Raporunu Aç")
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (inspection.businessId != null) {
+                            OutlinedButton(
+                                onClick = {
+                                    onNavigateToBusinessHistory(
+                                        inspection.businessId,
+                                        inspection.id
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Bu İşletmenin Geçmiş Denetimleri")
                             }
                         }
                     }

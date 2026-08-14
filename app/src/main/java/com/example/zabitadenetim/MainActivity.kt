@@ -25,6 +25,9 @@ import com.example.zabitadenetim.ui.screens.login.inspection.InspectionDetailScr
 import com.example.zabitadenetim.ui.screens.login.inspection.NewInspectionScreen
 import com.example.zabitadenetim.ui.theme.ZabitaDenetimTheme
 
+import com.example.zabitadenetim.ui.screens.login.inspection.PdfViewerScreen
+import com.example.zabitadenetim.ui.screens.login.inspection.BusinessInspectionHistoryScreen
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,6 +126,77 @@ class MainActivity : ComponentActivity() {
                                 inspectionId = inspectionId,
                                 onNavigateBack = {
                                     navController.popBackStack()
+                                },
+                                onNavigateToPdf = { selectedInspectionId ->
+                                    navController.navigate(
+                                        "pdf_viewer/$selectedInspectionId"
+                                    )
+                                },
+                                onNavigateToBusinessHistory = { businessId, currentInspectionId ->
+                                    navController.navigate(
+                                        "business_history/$businessId/$currentInspectionId"
+                                    )
+                                }
+                            )
+                        }
+
+                        //14.08.2026 pdf raporunu uygulama içinde göstermek için ekran
+                        composable(
+                            route = "pdf_viewer/{inspectionId}",
+                            arguments = listOf(
+                                navArgument("inspectionId") {
+                                    type = NavType.IntType
+                                }
+                            )
+                        ) { navBackStackEntry ->
+
+                            val inspectionId =
+                                navBackStackEntry.arguments
+                                    ?.getInt("inspectionId")
+                                    ?: 0
+
+                            PdfViewerScreen(
+                                inspectionId = inspectionId,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        //14.08.2026
+                        // seçilen işletmenin geçmiş denetimlerini göstermek için ekran
+                        composable(
+                            route = "business_history/{businessId}/{currentInspectionId}",
+                            arguments = listOf(
+                                navArgument("businessId") {
+                                    type = NavType.IntType
+                                },
+                                navArgument("currentInspectionId") {
+                                    type = NavType.IntType
+                                }
+                            )
+                        ) { navBackStackEntry ->
+
+                            val businessId =
+                                navBackStackEntry.arguments
+                                    ?.getInt("businessId")
+                                    ?: 0
+
+                            val currentInspectionId =
+                                navBackStackEntry.arguments
+                                    ?.getInt("currentInspectionId")
+                                    ?: 0
+
+                            BusinessInspectionHistoryScreen(
+                                businessId = businessId,
+                                currentInspectionId = currentInspectionId,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                },
+                                onNavigateToInspectionDetail = { inspectionId ->
+                                    navController.navigate(
+                                        "inspection_detail/$inspectionId"
+                                    )
                                 }
                             )
                         }
