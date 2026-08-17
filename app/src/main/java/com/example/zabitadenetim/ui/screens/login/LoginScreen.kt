@@ -27,6 +27,10 @@ fun LoginScreen(
 
     val context = LocalContext.current
 
+    // giriş işleminin yüklenme ve hata durumları
+    val isLoading by viewModel.isLoading.collectAsState()
+    val loginError by viewModel.loginError.collectAsState()
+
     // şimdi yazacağımız yapı sayesinde ekranda elemanlar yukardan aşağıya dizilecek
     Column(
         modifier = Modifier
@@ -45,6 +49,7 @@ fun LoginScreen(
                 .size(250.dp)
                 .padding(bottom = 16.dp)
         )
+
         // başlık
         Text(
             text = "Zabıta Denetim Sistemi",
@@ -59,9 +64,10 @@ fun LoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = {Text("E-posta")},
+            label = { Text("E-posta") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            enabled = !isLoading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -69,29 +75,62 @@ fun LoginScreen(
         // şifre alanına geçiyoruz
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it},
-            label = {Text("Şifre")},
+            onValueChange = { password = it },
+            label = { Text("Şifre") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation()  // şifreyi noktalı (gizli) hale getirir.
+            enabled = !isLoading,
+            visualTransformation = PasswordVisualTransformation() // şifreyi noktalı (gizli) hale getirir.
         )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         // giriş butonu
-       Button (
-           onClick = {
-               // butona basıldığı anda viewmodeldeki login fonksiyonuna
-               // veriler gönderiliyor
-               viewModel.login( context = context, email = email, password = password)
-               onNavigateToHome() // butona tıklandıığında ana ekrana geçişi tetikliyoruz.
+        Button(
+            onClick = {
+                // Kullanıcının girdiği bilgileri backend'e gönder
+                viewModel.login(
+                    context = context,
+                    email = email,
+                    password = password,
 
-           },
-           modifier = Modifier
-               .fillMaxWidth()
-               .height(50.dp)
-       ) {
-           Text(text = "Giriş Yap", style = MaterialTheme.typography.titleMedium)
-       }
+                    // Token başarıyla alınırsa ancak o zaman ana ekrana geç
+                    onSuccess = {
+                        onNavigateToHome()
+                    }
+                )
+            },
+            enabled = !isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
 
+            // Giriş isteği sürerken kullanıcıya bekleme durumunu göster
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(22.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = "Giriş Yap",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+
+        // Giriş başarısız olursa hata mesajını kullanıcıya göster
+        if (loginError != null) {
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = loginError ?: "",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
     }
 }

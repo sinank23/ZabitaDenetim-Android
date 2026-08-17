@@ -232,6 +232,14 @@ fun InspectionDetailScreen(
                             style = MaterialTheme.typography.bodyMedium
                         )
 
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // zabıta personnelinin adını göster
+                        Text(
+                            text = "Denetimi Yapan Personel: ${inspection.inspectorName ?: "Belirtilmemiş."}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
                         Spacer(modifier = Modifier.height(12.dp))
 
                         if (inspection.latitude != null && inspection.longitude != null) {

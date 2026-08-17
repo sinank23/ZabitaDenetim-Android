@@ -153,6 +153,66 @@ class InspectionViewModel : ViewModel() {
         }
     }
 
+    //17.08.2026
+    // karşılşaştırılacak mevcut denetim cevapları
+    private val _currentComparisonAnswers =
+        MutableStateFlow<List<InspectionAnswerResponse>>(emptyList())
+
+    val currentComparisonAnswers: StateFlow<List<InspectionAnswerResponse>> =
+        _currentComparisonAnswers.asStateFlow()
+
+    // karşılaştırılacak eski denetimin cwvapları
+    private val _previousComparisonAnswers =
+        MutableStateFlow<List<InspectionAnswerResponse>>(emptyList())
+
+    val previousComparisonAnswers: StateFlow<List<InspectionAnswerResponse>> =
+        _previousComparisonAnswers.asStateFlow()
+
+
+    // karşılaştırma verileri yüklenirken durumu tut
+    private val _isLoadingComparison =
+        MutableStateFlow(false)
+
+    val isLoadingComparison: StateFlow<Boolean> =
+        _isLoadingComparison.asStateFlow()
+
+    // karşılaştırılan iki denetimin de soru cevap kayıtlarını getir
+
+    fun fetchComparisonAnswers(
+        currentInspectionId: Int,
+        previousInspectionId: Int
+    ) {
+        viewModelScope.launch {
+            _isLoadingComparison.value = true
+
+            try {
+                val currentAnswers =
+                    apiService.getInspectionAnswers(currentInspectionId)
+
+                val previousAnswers = apiService.getInspectionAnswers(previousInspectionId)
+
+                _currentComparisonAnswers.value = currentAnswers
+                _previousComparisonAnswers.value = previousAnswers
+
+                Log.d(
+                    "DenetimKarsilastirma",
+                    "Mevcut: ${currentAnswers.size}, Eski: ${previousAnswers.size} cevap yüklendi."
+                )
+            } catch (e: Exception) {
+                _currentComparisonAnswers.value = emptyList()
+                _previousComparisonAnswers.value = emptyList()
+
+                Log.e(
+                    "DenetimKarsilastirma",
+                    "Karşılaştırma cevapları alınırken bir hata oluştu: ${e.localizedMessage}",
+                    e
+                )
+            } finally {
+                _isLoadingComparison.value = false
+            }
+        }
+    }
+
     // 05.08.2026
     // yapay zeka raporu yeniden oluşturulurken bekleme durumunu tut
     private val _isRetryingAi = MutableStateFlow(false)

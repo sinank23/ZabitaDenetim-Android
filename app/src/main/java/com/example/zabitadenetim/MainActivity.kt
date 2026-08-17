@@ -28,6 +28,8 @@ import com.example.zabitadenetim.ui.theme.ZabitaDenetimTheme
 import com.example.zabitadenetim.ui.screens.login.inspection.PdfViewerScreen
 import com.example.zabitadenetim.ui.screens.login.inspection.BusinessInspectionHistoryScreen
 
+import com.example.zabitadenetim.ui.screens.login.inspection.InspectionComparisonScreen
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,6 +142,39 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        //17.08.2026
+                        // iki denetimi karşılaştırma ekranı
+                        composable(
+                            route = "inspection_comparison/{currentInspectionId}/{previousInspectionId}",
+                            arguments = listOf(
+                                navArgument("currentInspectionId") {
+                                    type = NavType.IntType
+                                },
+                                navArgument("previousInspectionId") {
+                                    type = NavType.IntType
+                                }
+                            )
+                        ) {
+                            navBackStackEntry ->
+                            val currentInspectionId =
+                                navBackStackEntry.arguments
+                                    ?.getInt("currentInspectionId")
+                                    ?: 0
+
+                            val previousInspectionId =
+                                navBackStackEntry.arguments
+                                    ?.getInt("previousInspectionId")
+                                    ?: 0
+
+                            InspectionComparisonScreen(
+                                currentInspectionId = currentInspectionId,
+                                previousInspectionId = previousInspectionId,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
                         //14.08.2026 pdf raporunu uygulama içinde göstermek için ekran
                         composable(
                             route = "pdf_viewer/{inspectionId}",
@@ -190,12 +225,23 @@ class MainActivity : ComponentActivity() {
                             BusinessInspectionHistoryScreen(
                                 businessId = businessId,
                                 currentInspectionId = currentInspectionId,
+
+                                // Geçmiş denetimler ekranından geri dön
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 },
+
+                                // Geçmiş denetim kartına tıklanınca eski denetimin detayını aç
                                 onNavigateToInspectionDetail = { inspectionId ->
                                     navController.navigate(
                                         "inspection_detail/$inspectionId"
+                                    )
+                                },
+
+                                // Mevcut ve geçmiş denetim ID'lerini karşılaştırma ekranına gönder
+                                onNavigateToComparison = { currentId, previousId ->
+                                    navController.navigate(
+                                        "inspection_comparison/$currentId/$previousId"
                                     )
                                 }
                             )

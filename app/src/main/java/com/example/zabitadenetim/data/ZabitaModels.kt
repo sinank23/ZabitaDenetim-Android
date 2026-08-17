@@ -18,6 +18,9 @@ data class InspectionResponse(
     @SerializedName("inspector_id")
     val inspectorId: Int?,
 
+    @SerializedName("inspector_name")
+    val inspectorName: String?,
+
     @SerializedName("business_id")
     val businessId: Int?,
 

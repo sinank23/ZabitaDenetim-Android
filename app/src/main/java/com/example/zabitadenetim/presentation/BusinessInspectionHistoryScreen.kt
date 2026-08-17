@@ -22,6 +22,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,6 +42,10 @@ fun BusinessInspectionHistoryScreen(
     currentInspectionId: Int,
     onNavigateBack: () -> Unit,
     onNavigateToInspectionDetail: (Int) -> Unit,
+
+    // Geçmiş denetim ile mevcut denetimi karşılaştırma ekranına yönlendirir
+    onNavigateToComparison: (Int, Int) -> Unit,
+
     viewModel: InspectionViewModel = viewModel()
 ) {
 
@@ -308,6 +313,23 @@ fun BusinessInspectionHistoryScreen(
                                     style =
                                         MaterialTheme.typography.bodyMedium
                                 )
+
+                                //17.08.2026
+                                // geçmiş denetimi mevcut denetimle karşılaştırma butonu
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                OutlinedButton(
+                                    onClick = {
+                                        // karşılaştırma ekranına gönder
+                                        onNavigateToComparison(
+                                            currentInspectionId,
+                                            inspection.id
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Mevcut Denetimle Karşılaştır")
+                                }
                             }
                         }
                     }
