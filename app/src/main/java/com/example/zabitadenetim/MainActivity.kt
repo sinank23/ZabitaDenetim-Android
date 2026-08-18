@@ -30,6 +30,8 @@ import com.example.zabitadenetim.ui.screens.login.inspection.BusinessInspectionH
 
 import com.example.zabitadenetim.ui.screens.login.inspection.InspectionComparisonScreen
 
+import com.example.zabitadenetim.ui.screens.login.AdminHomeScreen
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,13 +54,38 @@ class MainActivity : ComponentActivity() {
                         composable("login") {
                             LoginScreen(
                                 onNavigateToHome = {
-                                    // Giriş başarılı olunca Ana Ekrana (home) geç
-                                    // popUpTo ile geri tuşuna basıldığında tekrar login'e düşmeyi engelliyoruz
+                                    // Zabıta personeli mevcut ana ekrana gider
                                     navController.navigate("home") {
-                                        popUpTo("login") {
-                                            inclusive = true
-                                        }
+                                        popUpTo("login") { inclusive = true }
                                     }
+                                },
+
+                                //18.08.2026
+                                // Süper Admin kendi yönetim ekranına yönlendirilir
+                                onNavigateToAdmin = {
+                                    navController.navigate("admin_home") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+
+                        composable("admin_home") {
+                            AdminHomeScreen(
+                                onNavigateToCategories = {
+                                    navController.navigate("admin_categories")
+                                },
+                                onNavigateToCriteria = {
+                                    navController.navigate("admin_criteria")
+                                },
+                                onNavigateToUsers = {
+                                    navController.navigate("admin_users")
+                                },
+                                onNavigateToBusinesses = {
+                                    navController.navigate("admin_businesses")
+                                },
+                                onNavigateToReports = {
+                                    navController.navigate("admin_reports")
                                 }
                             )
                         }

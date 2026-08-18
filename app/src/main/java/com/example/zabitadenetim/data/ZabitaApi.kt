@@ -17,6 +17,7 @@ import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.Query
 import retrofit2.http.Streaming
+import retrofit2.http.PUT
 
 
 interface ZabitaApi {
@@ -101,6 +102,26 @@ interface ZabitaApi {
     //07.08.2026
     @GET("businesses/categories/all")
     suspend fun getBusinessCategories(): List<BusinessCategoryResponse>
+
+    // süper admiin kategori ekle
+    // 18.08.2026
+    @POST("businesses/categories")
+    suspend fun createBusinessCategory(
+        @Body request: BusinessCategoryRequest
+    ): BusinessCategoryResponse
+
+    // süper admin güncelle 18.08.2026
+    @PUT("businesses/categories/{categoryId}")
+    suspend fun updateBusinessCategory(
+        @Path("categoryId") categoryId: Int,
+        @Body request: BusinessCategoryRequest
+    ): BusinessCategoryResponse
+
+    // admin silsin
+    @DELETE("businesses/categories/{categoryId}")
+    suspend fun deleteBusinessCategory(
+        @Path("categoryId") categoryId: Int
+    ): ResponseBody
 
     @GET("inspections/criteria/{category_id}")
     suspend fun getInspectionCriteria(

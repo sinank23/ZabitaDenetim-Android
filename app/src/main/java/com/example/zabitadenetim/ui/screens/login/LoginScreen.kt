@@ -18,6 +18,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun LoginScreen(
     onNavigateToHome: () -> Unit,
+
+    //18.08.2026
+    // Süper Admin girişinde ayrı yönetim ekranına geçmek için
+    onNavigateToAdmin: () -> Unit,
+
     // viewmodeli buraya entegre ediyoruz.
     viewModel: LoginViewModel = viewModel()
 ) {
@@ -95,8 +100,17 @@ fun LoginScreen(
                     password = password,
 
                     // Token başarıyla alınırsa ancak o zaman ana ekrana geç
-                    onSuccess = {
-                        onNavigateToHome()
+                    //18.08.2026
+// Giriş başarılıysa backend'den gelen role göre doğru ekrana yönlendir
+                    onSuccess = { role ->
+
+                        if (role == "superadmin") {
+                            // Süper Admin kendi yönetim ekranına gider
+                            onNavigateToAdmin()
+                        } else {
+                            // Zabıta personeli mevcut ana ekrana gider
+                            onNavigateToHome()
+                        }
                     }
                 )
             },

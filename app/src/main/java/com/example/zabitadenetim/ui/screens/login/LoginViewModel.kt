@@ -36,7 +36,7 @@ class LoginViewModel : ViewModel() {
         context: Context,
         email: String,
         password: String,
-        onSuccess: () -> Unit
+        onSuccess: (String) -> Unit
     ) {
 
         // arayüz donmasın diye viewmodelscope başlatmak lazım
@@ -69,7 +69,7 @@ class LoginViewModel : ViewModel() {
                 )
 
                 // token başarılı şekilde kaydedildiyse ana ekrana geç
-                onSuccess()
+                onSuccess(response.role) // giriş başarılıysa kullanıcı rolünü ekrana gönder
 
             } catch (e: Exception) {
 

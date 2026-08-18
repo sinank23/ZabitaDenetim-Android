@@ -53,3 +53,8 @@ data class CompleteInspectionResponse(
     @SerializedName("yes_answers") val yesAnswers: Int,
     @SerializedName("ai_report") val aiReport: String
 )
+
+// süper admin kategroi işlemleri
+data class BusinessCategoryRequest(
+    val name: String
+)
