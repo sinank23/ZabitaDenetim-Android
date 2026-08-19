@@ -31,6 +31,7 @@ import com.example.zabitadenetim.ui.screens.login.inspection.BusinessInspectionH
 import com.example.zabitadenetim.ui.screens.login.inspection.InspectionComparisonScreen
 
 import com.example.zabitadenetim.ui.screens.login.AdminHomeScreen
+import com.example.zabitadenetim.ui.screens.login.AdminCategoryScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,6 +87,17 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToReports = {
                                     navController.navigate("admin_reports")
+                                }
+                            )
+                        }
+
+                        //19.08.2026
+
+                        //admin kategori yönetim ekranı
+                        composable("admin_categories") {
+                            AdminCategoryScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
                                 }
                             )
                         }
