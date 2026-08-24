@@ -58,3 +58,40 @@ data class CompleteInspectionResponse(
 data class BusinessCategoryRequest(
     val name: String
 )
+
+//24.08.2026
+// Süper Admin kullanıcı yönetiminde backend'den gelen kullanıcı bilgileri
+data class UserResponse(
+    val id: Int,
+
+    @SerializedName("full_name")
+    val fullName: String,
+
+    val email: String,
+    val role: String,
+
+    @SerializedName("created_at")
+    val createdAt: String
+)
+
+//24.08.2026
+// Süper Admin tarafından yeni kullanıcı oluşturmak için gönderilecek veri
+data class UserCreateRequest(
+    @SerializedName("full_name")
+    val fullName: String,
+
+    val email: String,
+    val role: String,
+    val password: String
+)
+
+//24.08.2026
+// Süper Admin tarafından mevcut kullanıcıyı güncellemek için gönderilecek veri
+data class UserUpdateRequest(
+    @SerializedName("full_name")
+    val fullName: String,
+
+    val email: String,
+    val role: String,
+    val password: String? = null
+)

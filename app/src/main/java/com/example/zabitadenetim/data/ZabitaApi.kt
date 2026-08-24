@@ -134,6 +134,59 @@ interface ZabitaApi {
     suspend fun getCommonInspectionCriteria(): List<InspectionCriterionResponse>
 
 
+    //21.08.2026
+    //adminin tüm kriterleri listelemesi için
+    @GET("inspections/criteria/admin/all")
+    suspend fun getAllInspectionCriteriaForAdmin(): List<InspectionCriterionResponse>
+
+    //24.08.2026
+    //süper admin yeni denetim kriteri oluştursun
+    @POST("inspections/criteria/")
+    suspend fun createInspectionCriterion(
+        @Body request: InspectionCriterionRequest
+    ): InspectionCriterionResponse
+
+    //24.08.2026
+    //mevcut denetim kriterini güncelleyelim
+    @PUT("inspections/criteria/admin/{criterion_id}")
+    suspend fun updateInspectionCriterion(
+        @Path("criterion_id") criterionId: Int,
+        @Body request: InspectionCriterionRequest
+    ): InspectionCriterionResponse
+
+    //süper admin denetim kriterini silmek için
+    @DELETE("inspections/criteria/admin/{criterion_id}")
+    suspend fun deleteInspectionCriterion(
+        @Path("criterion_id") criterionId: Int
+    ): retrofit2.Response<Unit>
+
+    //24.08.2026
+// Süper Admin panelinde tüm kullanıcıları listelemek için
+    @GET("users/admin/all")
+    suspend fun getAllUsersForAdmin(): List<UserResponse>
+
+    //24.08.2026
+// Süper Admin tarafından yeni kullanıcı oluşturmak için
+    @POST("users/")
+    suspend fun createUserForAdmin(
+        @Body request: UserCreateRequest
+    ): UserResponse
+
+    //24.08.2026
+// Süper Admin tarafından mevcut kullanıcıyı güncellemek için
+    @PUT("users/admin/{user_id}")
+    suspend fun updateUserForAdmin(
+        @Path("user_id") userId: Int,
+        @Body request: UserUpdateRequest
+    ): UserResponse
+
+    //24.08.2026
+// Süper Admin tarafından kullanıcı silmek için
+    @DELETE("users/admin/{user_id}")
+    suspend fun deleteUserForAdmin(
+        @Path("user_id") userId: Int
+    ): retrofit2.Response<Unit>
+
     //10.08.2026
     @GET("inspections/{inspection_id}/answers")
     suspend fun getInspectionAnswers(

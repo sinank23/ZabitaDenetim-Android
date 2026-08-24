@@ -12,3 +12,13 @@ data class InspectionCriterionResponse(
     val questionText: String
 
 )
+
+//24.08.2026
+// yeni denetim eklemek ve güncellemek için gönderileceke veri
+data class InspectionCriterionRequest(
+    @SerializedName("category_id")
+    val categoryId: Int?,
+
+    @SerializedName("question_text")
+    val questionText: String
+)

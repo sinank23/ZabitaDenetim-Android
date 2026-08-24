@@ -14,7 +14,6 @@ fun AdminHomeScreen(
     onNavigateToCategories: () -> Unit,
     onNavigateToCriteria: () -> Unit,
     onNavigateToUsers: () -> Unit,
-    onNavigateToBusinesses: () -> Unit,
     onNavigateToReports: () -> Unit
 ) {
 
@@ -75,14 +74,6 @@ fun AdminHomeScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-
-        // kayıtlı işletmeleri yönetmek için
-        Button(
-            onClick = onNavigateToBusinesses,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("İşletme Yönetimi")
-        }
 
         Spacer(modifier = Modifier.height(12.dp))
 

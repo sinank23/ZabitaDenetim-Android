@@ -33,6 +33,9 @@ import com.example.zabitadenetim.ui.screens.login.inspection.InspectionCompariso
 import com.example.zabitadenetim.ui.screens.login.AdminHomeScreen
 import com.example.zabitadenetim.ui.screens.login.AdminCategoryScreen
 
+import com.example.zabitadenetim.ui.screens.login.AdminCriteriaScreen
+import com.example.zabitadenetim.ui.screens.login.AdminUserScreen
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,9 +85,6 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToUsers = {
                                     navController.navigate("admin_users")
                                 },
-                                onNavigateToBusinesses = {
-                                    navController.navigate("admin_businesses")
-                                },
                                 onNavigateToReports = {
                                     navController.navigate("admin_reports")
                                 }
@@ -96,6 +96,26 @@ class MainActivity : ComponentActivity() {
                         //admin kategori yönetim ekranı
                         composable("admin_categories") {
                             AdminCategoryScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        //24.08.2026
+                        //süper admin denetim kriteri yönetim ekranı
+                        composable("admin_criteria") {
+                            AdminCriteriaScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        //24.08.2026
+// Süper Admin kullanıcı yönetim ekranı
+                        composable("admin_users") {
+                            AdminUserScreen(
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }
