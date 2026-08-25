@@ -23,6 +23,10 @@ fun LoginScreen(
     // Süper Admin girişinde ayrı yönetim ekranına geçmek için
     onNavigateToAdmin: () -> Unit,
 
+    //25.08.2026
+    // Trafik Zabıta girişinde kendi ekranına geçmek için
+    onNavigateToTraffic: () -> Unit,
+
     // viewmodeli buraya entegre ediyoruz.
     viewModel: LoginViewModel = viewModel()
 ) {
@@ -104,12 +108,22 @@ fun LoginScreen(
 // Giriş başarılıysa backend'den gelen role göre doğru ekrana yönlendir
                     onSuccess = { role ->
 
-                        if (role == "superadmin") {
-                            // Süper Admin kendi yönetim ekranına gider
-                            onNavigateToAdmin()
-                        } else {
-                            // Zabıta personeli mevcut ana ekrana gider
-                            onNavigateToHome()
+                        when (role) {
+
+                            "superadmin" -> {
+                                // Süper Admin kendi yönetim ekranına gider
+                                onNavigateToAdmin()
+                            }
+
+                            "trafik_zabita" -> {
+                                // Trafik Zabıta kendi trafik ekranına gider
+                                onNavigateToTraffic()
+                            }
+
+                            else -> {
+                                // Zabıta personeli mevcut ana ekrana gider
+                                onNavigateToHome()
+                            }
                         }
                     }
                 )

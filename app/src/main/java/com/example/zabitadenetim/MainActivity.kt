@@ -35,7 +35,8 @@ import com.example.zabitadenetim.ui.screens.login.AdminCategoryScreen
 
 import com.example.zabitadenetim.ui.screens.login.AdminCriteriaScreen
 import com.example.zabitadenetim.ui.screens.login.AdminUserScreen
-
+import com.example.zabitadenetim.ui.screens.login.AdminReportsScreen
+import com.example.zabitadenetim.ui.screens.login.TrafficHomeScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,6 +71,14 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("admin_home") {
                                         popUpTo("login") { inclusive = true }
                                     }
+                                },
+
+                                //25.08.2026
+                                // Trafik Zabıta kendi ana ekranına yönlendirilir
+                                onNavigateToTraffic = {
+                                    navController.navigate("traffic_home") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
                                 }
                             )
                         }
@@ -89,6 +98,12 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("admin_reports")
                                 }
                             )
+                        }
+
+                        //25.08.2026
+// Trafik Zabıta ana ekranı
+                        composable("traffic_home") {
+                            TrafficHomeScreen()
                         }
 
                         //19.08.2026
@@ -118,6 +133,23 @@ class MainActivity : ComponentActivity() {
                             AdminUserScreen(
                                 onNavigateBack = {
                                     navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        //25.08.2026
+//süper admin rapor ekranı
+                        composable("admin_reports") {
+                            AdminReportsScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                },
+
+                                // rapor kartından seçilen denetimin mevcut PDF ekranını aç
+                                onNavigateToPdf = { inspectionId ->
+                                    navController.navigate(
+                                        "pdf_viewer/$inspectionId"
+                                    )
                                 }
                             )
                         }
