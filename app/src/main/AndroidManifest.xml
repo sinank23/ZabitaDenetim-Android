@@ -19,6 +19,12 @@
         android:theme="@style/Theme.ZabitaDenetim"
         android:usesCleartextTraffic="true">
 
+        <!--26.08.2026-->
+        <!-- Google Maps SDK için API anahtarı -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

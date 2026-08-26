@@ -209,4 +209,15 @@ interface ZabitaApi {
         @Path("businessId") businessId: Int
     ): List<InspectionResponse>
 
+    //26.08.2026
+    //trafik zabıta yeni işlem kaydı oluşturmak için
+    @POST("traffic/")
+    suspend fun createTrafficInspection(
+        @Body request: TrafficInspectionCreateRequest
+    ): TrafficInspectionResponse
+
+    //trafik zabıtanın oluşturduğu kayıtları listelemek için
+    @GET("traffic/")
+    suspend fun getTrafficInspections(): List<TrafficInspectionResponse>
+
 }

@@ -2,6 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    //26.08.2026
+    // Google Maps API anahtarını güvenli şekilde okumak için
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -76,4 +80,11 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.2.0")
 
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    //26.08.2026
+// Trafik Zabıta konum seçim ekranında Google Maps göstermek için
+
+    //26.08.2026
+// Trafik Zabıta konum seçim ekranında klasik Google Maps SDK kullanmak için
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
 }

@@ -17,7 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun TrafficHomeScreen() {
+
+fun TrafficHomeScreen(
+    onNavigateToNewTrafficInspection: () -> Unit,
+    onNavigateToTrafficRecords: () -> Unit
+) {
     //25.08.2026
     // trafik zabıta giirş yaptıktan sonra kendi ekranını görsün
 
@@ -49,7 +53,7 @@ fun TrafficHomeScreen() {
 
         Button(
             onClick = {
-
+                onNavigateToNewTrafficInspection()
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -60,7 +64,7 @@ fun TrafficHomeScreen() {
 
         Button(
             onClick = {
-
+                onNavigateToTrafficRecords()
             },
             modifier = Modifier.fillMaxWidth()
         ) {

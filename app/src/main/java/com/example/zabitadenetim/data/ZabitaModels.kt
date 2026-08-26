@@ -95,3 +95,54 @@ data class UserUpdateRequest(
     val role: String,
     val password: String? = null
 )
+
+//26.08.2026
+// yeni trafik işlemi oluşturulurken backende gönderilecek veri
+data class TrafficInspectionCreateRequest(
+    @SerializedName("violation_type")
+    val violationType: String,
+
+    val plate: String,
+
+    @SerializedName("vehicle_type")
+    val vehicleType: String?,
+
+    val address: String?,
+    val latitude: Double?,
+    val longitude: Double?,
+    val description: String?,
+
+    @SerializedName("action_taken")
+    val actionTaken: String?
+)
+
+//26.08.2026
+//backenddern androide dönen trafik işlem kaydı
+
+data class TrafficInspectionResponse(
+    val id: Int,
+
+    @SerializedName("violation_type")
+    val violationType: String,
+
+    val plate: String,
+
+    @SerializedName("vehicle_type")
+    val vehicleType: String?,
+
+    val address: String?,
+    val latitude: Double?,
+    val longitude: Double?,
+    val description: String?,
+
+    @SerializedName("action_taken")
+    val actionTaken: String?,
+
+    val status: String?,
+
+    @SerializedName("inspector_id")
+    val inspectorId: Int,
+
+    @SerializedName("created_at")
+    val createdAt: String
+)
