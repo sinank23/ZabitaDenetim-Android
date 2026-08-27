@@ -44,6 +44,8 @@ import com.example.zabitadenetim.ui.screens.login.NewTrafficInspectionScreen
 
 import com.example.zabitadenetim.ui.screens.login.TrafficLocationPickerScreen
 
+import com.example.zabitadenetim.ui.screens.login.TrafficInspectionDetailScreen
+
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -176,10 +178,43 @@ class MainActivity : ComponentActivity() {
 
 
                         //26.08.2026
-                        // Trafik Zabıta kayıtlarını listeleme ekranı
+// Trafik Zabıta kayıtlarını listeleme ekranı
                         composable("traffic_records") {
 
                             TrafficRecordsScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                },
+
+                                onNavigateToDetail = { trafficInspectionId ->
+
+                                    //27.08.2026
+                                    // seçilen trafik kaydının detay ekranına git
+                                    navController.navigate(
+                                        "traffic_detail/$trafficInspectionId"
+                                    )
+                                }
+                            )
+                        }
+
+                        //27.08.2026
+// Trafik Zabıta kayıt detay ekranı
+                        composable(
+                            route = "traffic_detail/{trafficInspectionId}",
+                            arguments = listOf(
+                                navArgument("trafficInspectionId") {
+                                    type = NavType.IntType
+                                }
+                            )
+                        ) { navBackStackEntry ->
+
+                            val trafficInspectionId =
+                                navBackStackEntry.arguments
+                                    ?.getInt("trafficInspectionId")
+                                    ?: 0
+
+                            TrafficInspectionDetailScreen(
+                                trafficInspectionId = trafficInspectionId,
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }

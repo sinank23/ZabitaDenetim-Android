@@ -28,6 +28,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
+import android.net.Uri
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import com.example.zabitadenetim.ui.screens.login.inspection.createImageUri
+
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewTrafficInspectionScreen(
@@ -83,6 +100,41 @@ fun NewTrafficInspectionScreen(
 
     var violationMenuExpanded by remember {
         mutableStateOf(false)
+    }
+
+    //27.08.2026
+    //trafik işlemine eklenecek fotoğrafları tut
+    var selectedImageUris by remember {
+        mutableStateOf<List<Uri>>(emptyList())
+    }
+
+    var cameraUri by remember {
+        mutableStateOf(Uri.EMPTY)
+    }
+
+    //KAMERA İLE ÇEKİLEN FOTOĞRAFI TRAFİK FOTOĞRAF LİSTESİNE EKLE
+    var cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+
+        if (success) {
+            selectedImageUris =
+                selectedImageUris + cameraUri
+        }
+
+    }
+
+    // galeriden en fazla 5 fotoğraf seç
+    val multiplePhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(
+            maxItems = 5
+        )
+    ) { uris ->
+
+        if (uris.isNotEmpty()) {
+            selectedImageUris = uris
+        }
+
     }
 
     //26.08.2026
@@ -367,6 +419,117 @@ fun NewTrafficInspectionScreen(
                 minLines = 2
             )
 
+            //27.08.2026
+// Trafik işlemine fotoğraf ekleme alanı
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+
+            HorizontalDivider()
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+            Text(
+                text = "Trafik İşlem Fotoğrafları",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                Button(
+                    onClick = {
+
+                        multiplePhotoPickerLauncher.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Galeri")
+                }
+
+                Button(
+                    onClick = {
+
+                        val uri =
+                            createImageUri(context)
+
+                        if (uri != null) {
+                            cameraUri = uri
+                            cameraLauncher.launch(uri)
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Kamera")
+                }
+            }
+
+            if (selectedImageUris.isNotEmpty()) {
+
+                Text(
+                    text = "Toplam ${selectedImageUris.size} fotoğraf eklendi",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .horizontalScroll(
+                            rememberScrollState()
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    selectedImageUris.forEach { imageUri ->
+
+                        Box(
+                            modifier = Modifier.size(120.dp)
+                        ) {
+
+                            AsyncImage(
+                                model = imageUri,
+                                contentDescription = "Seçilen trafik fotoğrafı",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            IconButton(
+                                onClick = {
+
+                                    selectedImageUris =
+                                        selectedImageUris.filterNot {
+                                            it == imageUri
+                                        }
+                                },
+                                modifier = Modifier.align(
+                                    Alignment.TopEnd
+                                )
+                            ) {
+
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Fotoğrafı kaldır"
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(
                 modifier = Modifier.height(24.dp)
             )
@@ -385,8 +548,28 @@ fun NewTrafficInspectionScreen(
                         longitude = currentLongitude,
                         description = description.trim().takeIf { it.isNotEmpty() },
                         actionTaken = actionTaken.trim().takeIf { it.isNotEmpty() },
-                        onSuccess = {
-                            // kayıt başarılı olursa trafik ana ekranına geri dön
+                        onSuccess = { trafficInspectionId ->
+
+                            //27.08.2026
+                            // trafik kaydı oluşturulduktan sonra seçilen fotoğrafları yükle
+                            selectedImageUris.forEach { imageUri ->
+
+                                val photoPart =
+                                    prepareTrafficPhotoPart(
+                                        context,
+                                        imageUri
+                                    )
+
+                                if (photoPart != null) {
+
+                                    viewModel.uploadTrafficInspectionPhoto(
+                                        trafficInspectionId = trafficInspectionId,
+                                        photoPart = photoPart
+                                    )
+                                }
+                            }
+
+                            // kayıt oluşturulduktan sonra trafik ana ekranına geri dön
                             onNavigateBack()
                         }
                     )
@@ -401,5 +584,54 @@ fun NewTrafficInspectionScreen(
                 modifier = Modifier.height(24.dp)
             )
         }
+    }
+}
+
+//27.08.2026
+// seçilen trafik fotoğrafını Retrofit multipart formatına dönüştür
+fun prepareTrafficPhotoPart(
+    context: android.content.Context,
+    fileUri: Uri
+): MultipartBody.Part? {
+
+    return try {
+
+        val inputStream =
+            context.contentResolver.openInputStream(fileUri)
+
+        val bytes =
+            inputStream?.readBytes()
+
+        inputStream?.close()
+
+        if (bytes != null) {
+
+            val fileName =
+                "traffic_photo_${System.currentTimeMillis()}.jpg"
+
+            val requestFile =
+                bytes.toRequestBody(
+                    "image/jpeg".toMediaTypeOrNull()
+                )
+
+            MultipartBody.Part.createFormData(
+                "file",
+                fileName,
+                requestFile
+            )
+
+        } else {
+
+            null
+        }
+
+    } catch (e: Exception) {
+
+        Log.e(
+            "TrafikFoto",
+            "Fotoğraf dönüştürme hatası: ${e.localizedMessage}"
+        )
+
+        null
     }
 }

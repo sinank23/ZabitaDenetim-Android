@@ -87,4 +87,8 @@ dependencies {
     //26.08.2026
 // Trafik Zabıta konum seçim ekranında klasik Google Maps SDK kullanmak için
     implementation("com.google.android.gms:play-services-maps:19.2.0")
+
+    //27.08.2026
+// trafik kayıt kartlarında PDF ikonu kullanmak için
+    implementation("androidx.compose.material:material-icons-extended")
 }

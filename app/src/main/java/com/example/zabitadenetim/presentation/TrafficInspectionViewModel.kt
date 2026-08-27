@@ -11,6 +11,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+import okhttp3.MultipartBody
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody
+
 class TrafficInspectionViewModel : ViewModel() {
 
     //26.08.2026
@@ -89,7 +94,7 @@ class TrafficInspectionViewModel : ViewModel() {
         longitude: Double?,
         description: String?,
         actionTaken: String?,
-        onSuccess: () -> Unit = {}
+        onSuccess: (Int) -> Unit = {}
     ) {
 
         viewModelScope.launch {
@@ -109,7 +114,8 @@ class TrafficInspectionViewModel : ViewModel() {
                     actionTaken = actionTaken
                 )
 
-                ApiClient.apiService.createTrafficInspection(request)
+                val createdTrafficInspection =
+                    ApiClient.apiService.createTrafficInspection(request)
 
                 // yeni kayıt oluşturulduktan sonra listeyi yenile
                 fetchTrafficInspections()
@@ -119,7 +125,7 @@ class TrafficInspectionViewModel : ViewModel() {
                     "Yeni trafik işlemi oluşturuldu."
                 )
 
-                onSuccess()
+                onSuccess(createdTrafficInspection.id)
 
             } catch (e: Exception) {
 
@@ -129,6 +135,77 @@ class TrafficInspectionViewModel : ViewModel() {
                 Log.e(
                     "TrafikZabita",
                     "Trafik işlemi oluşturulurken hata oluştu.",
+                    e
+                )
+            }
+        }
+    }
+
+    //27.08.2026
+    //trafik işlemm kaydına fotoğraf yüklemek için
+    fun uploadTrafficInspectionPhoto(
+        trafficInspectionId: Int,
+        photoPart: MultipartBody.Part,
+        onSuccess: () -> Unit = {}
+    ) {
+
+        viewModelScope.launch {
+            try {
+                ApiClient.apiService.uploadTrafficInspectionPhoto(
+                    trafficInspectionId = trafficInspectionId,
+                    file = photoPart
+                )
+
+                Log.d(
+                    "TrafikFoto",
+                    "Trafik fotoğrafı başarıyla yüklendi."
+                )
+                onSuccess()
+
+            } catch (e: Exception) {
+                _errorMessage.value =
+                    "Trafik fotoğrafı yüklenemedi: ${e.localizedMessage}"
+
+                Log.e(
+                    "TrafikFoto",
+                    "Trafik fotoğrafı yüklenirken hata oluştu.",
+                    e
+                )
+            }
+        }
+    }
+
+    //27.08.2026
+// trafik işlem kaydının PDF raporunu backend üzerinden almak için
+    fun getTrafficInspectionPdf(
+        trafficInspectionId: Int,
+        onSuccess: (ResponseBody) -> Unit
+    ) {
+
+        viewModelScope.launch {
+
+            try {
+
+                val pdfResponse =
+                    ApiClient.apiService.getTrafficInspectionPdf(
+                        trafficInspectionId
+                    )
+
+                Log.d(
+                    "TrafikPDF",
+                    "Trafik PDF raporu başarıyla alındı."
+                )
+
+                onSuccess(pdfResponse)
+
+            } catch (e: Exception) {
+
+                _errorMessage.value =
+                    "Trafik PDF raporu alınamadı: ${e.localizedMessage}"
+
+                Log.e(
+                    "TrafikPDF",
+                    "Trafik PDF raporu alınırken hata oluştu.",
                     e
                 )
             }

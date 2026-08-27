@@ -220,4 +220,21 @@ interface ZabitaApi {
     @GET("traffic/")
     suspend fun getTrafficInspections(): List<TrafficInspectionResponse>
 
+    //27.08.2026
+    //trafik zabıta işlem kaydına foto yüklemek için
+    @Multipart
+    @POST("traffic/{traffic_inspection_id}/photos/")
+    suspend fun uploadTrafficInspectionPhoto(
+        @Path("traffic_inspection_id") trafficInspectionId: Int,
+        @Part file: MultipartBody.Part
+    ): ResponseBody
+
+    //27.08.2026
+    // trafik zabıt kayıdıının pdf raporunu almak için
+    @GET("traffic/{traffic_inspection_id}/report/pdf")
+    suspend fun getTrafficInspectionPdf(
+        @Path("traffic_inspection_id") trafficInspectionId: Int
+
+    ): ResponseBody
+
 }
