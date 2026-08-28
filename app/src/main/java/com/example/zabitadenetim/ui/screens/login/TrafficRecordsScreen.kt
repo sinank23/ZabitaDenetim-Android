@@ -36,6 +36,7 @@ import java.io.File
 fun TrafficRecordsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDetail: (Int) -> Unit,
+    onNavigateToPdf: (Int) -> Unit,
     viewModel: TrafficInspectionViewModel = viewModel()
 ) {
 
@@ -44,10 +45,6 @@ fun TrafficRecordsScreen(
     val trafficInspections by viewModel.trafficInspections.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-
-    //27.08.2026
-    // trafik PDF raporunu cihazın indirme klasörüne kaydetmek için context
-    val context = LocalContext.current
 
     // ekran ilk açıldığında trafik kayıtlarını backend üzerinden getir
     LaunchedEffect(Unit) {
@@ -202,37 +199,9 @@ fun TrafficRecordsScreen(
                                 IconButton(
                                     onClick = {
 
-                                        //27.08.2026
-                                        // seçilen trafik kaydının PDF raporunu indir
-                                        viewModel.getTrafficInspectionPdf(
-                                            trafficInspectionId = traffic.id,
-                                            onSuccess = { pdfResponse ->
-
-                                                val isSaved =
-                                                    saveTrafficPdfToDownloads(
-                                                        context = context,
-                                                        responseBody = pdfResponse,
-                                                        trafficInspectionId = traffic.id
-                                                    )
-
-                                                if (isSaved) {
-
-                                                    Toast.makeText(
-                                                        context,
-                                                        "PDF raporu indirildi.",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-
-                                                } else {
-
-                                                    Toast.makeText(
-                                                        context,
-                                                        "PDF raporu kaydedilemedi.",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
-                                            }
-                                        )
+                                        //28.08.2026
+                                        // seçilen trafik kaydının PDF raporunu uygulama içinde aç
+                                        onNavigateToPdf(traffic.id)
                                     },
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
@@ -250,126 +219,5 @@ fun TrafficRecordsScreen(
                 }
             }
         }
-    }
-}
-
-//27.08.2026
-// backend üzerinden alınan trafik PDF raporunu cihazın indirme klasörüne kaydet
-fun saveTrafficPdfToDownloads(
-    context: Context,
-    responseBody: ResponseBody,
-    trafficInspectionId: Int
-): Boolean {
-
-    return try {
-
-        val fileName =
-            "traffic_report_$trafficInspectionId.pdf"
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-
-            val contentValues =
-                ContentValues().apply {
-
-                    put(
-                        MediaStore.Downloads.DISPLAY_NAME,
-                        fileName
-                    )
-
-                    put(
-                        MediaStore.Downloads.MIME_TYPE,
-                        "application/pdf"
-                    )
-
-                    put(
-                        MediaStore.Downloads.RELATIVE_PATH,
-                        "${Environment.DIRECTORY_DOWNLOADS}/ZabitaDenetim"
-                    )
-
-                    put(
-                        MediaStore.Downloads.IS_PENDING,
-                        1
-                    )
-                }
-
-            val contentResolver =
-                context.contentResolver
-
-            val pdfUri =
-                contentResolver.insert(
-                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                    contentValues
-                ) ?: return false
-
-            contentResolver
-                .openOutputStream(pdfUri)
-                ?.use { outputStream ->
-
-                    responseBody
-                        .byteStream()
-                        .use { inputStream ->
-
-                            inputStream.copyTo(
-                                outputStream
-                            )
-                        }
-                }
-                ?: return false
-
-            contentValues.clear()
-
-            contentValues.put(
-                MediaStore.Downloads.IS_PENDING,
-                0
-            )
-
-            contentResolver.update(
-                pdfUri,
-                contentValues,
-                null,
-                null
-            )
-
-            true
-
-        } else {
-
-            val downloadsDirectory =
-                context.getExternalFilesDir(
-                    Environment.DIRECTORY_DOWNLOADS
-                ) ?: return false
-
-            val pdfFile =
-                File(
-                    downloadsDirectory,
-                    fileName
-                )
-
-            responseBody
-                .byteStream()
-                .use { inputStream ->
-
-                    pdfFile
-                        .outputStream()
-                        .use { outputStream ->
-
-                            inputStream.copyTo(
-                                outputStream
-                            )
-                        }
-                }
-
-            true
-        }
-
-    } catch (e: Exception) {
-
-        Log.e(
-            "TrafikPDF",
-            "PDF kaydedilirken hata oluştu.",
-            e
-        )
-
-        false
     }
 }

@@ -193,6 +193,15 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(
                                         "traffic_detail/$trafficInspectionId"
                                     )
+                                },
+
+                                onNavigateToPdf = { trafficInspectionId ->
+
+                                    //28.08.2026
+                                    // seçilen trafik kaydının PDF raporunu uygulama içinde aç
+                                    navController.navigate(
+                                        "traffic_pdf_viewer/$trafficInspectionId"
+                                    )
                                 }
                             )
                         }
@@ -485,6 +494,32 @@ class MainActivity : ComponentActivity() {
 
                             PdfViewerScreen(
                                 inspectionId = inspectionId,
+
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        //28.08.2026
+// trafik zabıta PDF raporunu uygulama içinde göstermek için ekran
+                        composable(
+                            route = "traffic_pdf_viewer/{trafficInspectionId}",
+                            arguments = listOf(
+                                navArgument("trafficInspectionId") {
+                                    type = NavType.IntType
+                                }
+                            )
+                        ) { navBackStackEntry ->
+
+                            val trafficInspectionId =
+                                navBackStackEntry.arguments
+                                    ?.getInt("trafficInspectionId")
+                                    ?: 0
+
+                            PdfViewerScreen(
+                                inspectionId = trafficInspectionId,
+                                isTrafficReport = true,
 
                                 onNavigateBack = {
                                     navController.popBackStack()
