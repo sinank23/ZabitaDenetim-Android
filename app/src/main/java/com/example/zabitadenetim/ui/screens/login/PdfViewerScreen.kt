@@ -9,6 +9,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,13 +23,15 @@ import com.example.zabitadenetim.data.ApiClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import androidx.compose.foundation.horizontalScroll
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PdfViewerScreen(
     inspectionId: Int,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    isTrafficReport: Boolean = false
 ) {
     val context = LocalContext.current
 
@@ -56,6 +60,12 @@ fun PdfViewerScreen(
         mutableIntStateOf(0)
     }
 
+    //28.08.2026
+    // PDF sayfasının yakınlaştırma seviyesini tut
+    var zoomScale by remember {
+        mutableStateOf(1f)
+    }
+
 
     //14.08.2026
     // ekran açıldığında backend üzerinden ilgili denetimin PDF raporunu indir
@@ -66,31 +76,46 @@ fun PdfViewerScreen(
 
         try {
 
-            val response = withContext(Dispatchers.IO) {
-                ApiClient.apiService.getInspectionPdf(inspectionId)
+            val responseBody = withContext(Dispatchers.IO) {
+
+                if (isTrafficReport) {
+
+                    //28.08.2026
+                    // trafik zabıta kaydının PDF raporunu backend üzerinden al
+                    ApiClient.apiService.getTrafficInspectionPdf(
+                        inspectionId
+                    )
+
+                } else {
+
+                    // normal zabıta denetiminin mevcut PDF raporunu al
+                    val response =
+                        ApiClient.apiService.getInspectionPdf(
+                            inspectionId
+                        )
+
+                    if (!response.isSuccessful) {
+                        throw Exception(
+                            "PDF raporu alınamadı. HTTP kodu: ${response.code()}"
+                        )
+                    }
+
+                    response.body()
+                        ?: throw Exception(
+                            "PDF raporu boş geldi."
+                        )
+                }
             }
-
-            if (!response.isSuccessful) {
-                errorMessage =
-                    "PDF raporu alınamadı. HTTP kodu: ${response.code()}"
-
-                isLoading = false
-                return@LaunchedEffect
-            }
-
-            val responseBody = response.body()
-
-            if (responseBody == null) {
-                errorMessage = "PDF raporu boş geldi."
-                isLoading = false
-                return@LaunchedEffect
-            }
-
 
             // PDF dosyasını uygulamanın geçici cache klasörüne kaydet
             val pdfFile = File(
                 context.cacheDir,
-                "denetim_raporu_$inspectionId.pdf"
+
+                if (isTrafficReport) {
+                    "trafik_raporu_$inspectionId.pdf"
+                } else {
+                    "denetim_raporu_$inspectionId.pdf"
+                }
             )
 
             withContext(Dispatchers.IO) {
@@ -219,7 +244,13 @@ fun PdfViewerScreen(
             TopAppBar(
 
                 title = {
-                    Text("Denetim PDF Raporu")
+                    Text(
+                        if (isTrafficReport) {
+                            "Trafik PDF Raporu"
+                        } else {
+                            "Denetim PDF Raporu"
+                        }
+                    )
                 },
 
                 navigationIcon = {
@@ -232,6 +263,46 @@ fun PdfViewerScreen(
                             imageVector =
                                 Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Geri"
+                        )
+                    }
+                },
+
+                actions = {
+
+                    //28.08.2026
+                    // PDF raporunu küçültmek için
+                    IconButton(
+                        onClick = {
+                            if (zoomScale > 0.75f) {
+                                zoomScale -= 0.25f
+                            }
+                        },
+                        enabled = zoomScale > 0.75f
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            contentDescription = "PDF'i küçült"
+                        )
+                    }
+
+                    Text(
+                        text = "${(zoomScale * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    //28.08.2026
+                    // PDF raporunu büyütmek için
+                    IconButton(
+                        onClick = {
+                            if (zoomScale < 2.5f) {
+                                zoomScale += 0.25f
+                            }
+                        },
+                        enabled = zoomScale < 2.5f
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "PDF'i büyüt"
                         )
                     }
                 },
@@ -314,34 +385,47 @@ fun PdfViewerScreen(
 
 
                     // PDF sayfasının gösterildiği alan
-                    Box(
+                    // PDF sayfasının gösterildiği alan
+                    BoxWithConstraints(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-                            .verticalScroll(
-                                rememberScrollState()
-                            )
-                            .padding(8.dp),
-
-                        contentAlignment =
-                            Alignment.TopCenter
                     ) {
 
-                        pageBitmap?.let { bitmap ->
+                        val pdfWidth =
+                            maxWidth * zoomScale
 
-                            Image(
-                                bitmap =
-                                    bitmap.asImageBitmap(),
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .horizontalScroll(
+                                    rememberScrollState()
+                                )
+                                .verticalScroll(
+                                    rememberScrollState()
+                                )
+                                .padding(8.dp),
 
-                                contentDescription =
-                                    "PDF Sayfası ${currentPageIndex + 1}",
+                            contentAlignment =
+                                Alignment.TopCenter
+                        ) {
 
-                                modifier =
-                                    Modifier.fillMaxWidth(),
+                            pageBitmap?.let { bitmap ->
 
-                                contentScale =
-                                    ContentScale.FillWidth
-                            )
+                                Image(
+                                    bitmap =
+                                        bitmap.asImageBitmap(),
+
+                                    contentDescription =
+                                        "PDF Sayfası ${currentPageIndex + 1}",
+
+                                    modifier =
+                                        Modifier.width(pdfWidth),
+
+                                    contentScale =
+                                        ContentScale.FillWidth
+                                )
+                            }
                         }
                     }
 
