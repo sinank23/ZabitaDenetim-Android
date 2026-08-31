@@ -19,6 +19,9 @@ import retrofit2.http.Query
 import retrofit2.http.Streaming
 import retrofit2.http.PUT
 
+import retrofit2.http.PATCH
+
+
 
 interface ZabitaApi {
     // tüm denetimleri almak için yazdığımız endpoint
@@ -235,6 +238,28 @@ interface ZabitaApi {
     suspend fun getTrafficInspectionPdf(
         @Path("traffic_inspection_id") trafficInspectionId: Int
 
+    ): ResponseBody
+
+    //31.08.2026
+    //seçilen trafik kaydına ait fotoları almak için
+    @GET("traffic/{traffic_inspection_id}/photos/")
+    suspend fun getTrafficInspectionPhotos(
+        @Path("traffic_inspection_id") trafficInspectionId: Int
+    ): List<TrafficInspectionPhotoResponse>
+
+    //31.08.2026
+// süper admin trafik işlem kaydının durumunu güncellemek için
+    @PATCH("traffic/{traffic_inspection_id}/status")
+    suspend fun updateTrafficInspectionStatus(
+        @Path("traffic_inspection_id") trafficInspectionId: Int,
+        @Query("new_status") newStatus: String
+    ): TrafficStatusUpdateResponse
+
+    //31.08.2026
+// süper admin trafik işlem kaydını silmek için
+    @DELETE("traffic/{traffic_inspection_id}")
+    suspend fun deleteTrafficInspection(
+        @Path("traffic_inspection_id") trafficInspectionId: Int
     ): ResponseBody
 
 }

@@ -124,6 +124,15 @@ class MainActivity : ComponentActivity() {
 
                                 onNavigateToReports = {
                                     navController.navigate("admin_reports")
+                                },
+
+                                onNavigateToTrafficRecords = {
+
+                                    //31.08.2026
+                                    // süper admin trafik zabıta işlem kayıtlarını görüntüleme ekranına gider
+                                    navController.navigate(
+                                        "admin_traffic_records"
+                                    )
                                 }
                             )
                         }
@@ -146,7 +155,7 @@ class MainActivity : ComponentActivity() {
 
 
                         //26.08.2026
-// Trafik Zabıta yeni işlem oluşturma ekranı
+                        // Trafik Zabıta yeni işlem oluşturma ekranı
                         composable("traffic_new") { backStackEntry ->
 
                             val selectedLatitude =
@@ -178,7 +187,7 @@ class MainActivity : ComponentActivity() {
 
 
                         //26.08.2026
-// Trafik Zabıta kayıtlarını listeleme ekranı
+                        // Trafik Zabıta kayıtlarını listeleme ekranı
                         composable("traffic_records") {
 
                             TrafficRecordsScreen(
@@ -206,8 +215,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+
                         //27.08.2026
-// Trafik Zabıta kayıt detay ekranı
+                        // Trafik Zabıta kayıt detay ekranı
                         composable(
                             route = "traffic_detail/{trafficInspectionId}",
                             arguments = listOf(
@@ -224,6 +234,33 @@ class MainActivity : ComponentActivity() {
 
                             TrafficInspectionDetailScreen(
                                 trafficInspectionId = trafficInspectionId,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+
+                        //31.08.2026
+                        // süper admin trafik işlem detay ve durum yönetim ekranı
+                        composable(
+                            route = "admin_traffic_detail/{trafficInspectionId}",
+                            arguments = listOf(
+                                navArgument("trafficInspectionId") {
+                                    type = NavType.IntType
+                                }
+                            )
+                        ) { navBackStackEntry ->
+
+                            val trafficInspectionId =
+                                navBackStackEntry.arguments
+                                    ?.getInt("trafficInspectionId")
+                                    ?: 0
+
+                            TrafficInspectionDetailScreen(
+                                trafficInspectionId = trafficInspectionId,
+                                isAdmin = true,
+
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }
@@ -338,6 +375,34 @@ class MainActivity : ComponentActivity() {
 
                                     navController.navigate(
                                         "pdf_viewer/$inspectionId"
+                                    )
+                                }
+                            )
+                        }
+
+
+                        //31.08.2026
+                        // süper admin trafik zabıta işlem kayıtlarını görüntüleme ekranı
+                        composable("admin_traffic_records") {
+
+                            TrafficRecordsScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                },
+
+                                onNavigateToDetail = { trafficInspectionId ->
+
+                                    //31.08.2026
+                                    // süper admin trafik kayıt detay ekranına yönetim yetkisiyle gider
+                                    navController.navigate(
+                                        "admin_traffic_detail/$trafficInspectionId"
+                                    )
+                                },
+
+                                onNavigateToPdf = { trafficInspectionId ->
+
+                                    navController.navigate(
+                                        "traffic_pdf_viewer/$trafficInspectionId"
                                     )
                                 }
                             )
@@ -501,8 +566,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+
                         //28.08.2026
-// trafik zabıta PDF raporunu uygulama içinde göstermek için ekran
+                        // trafik zabıta PDF raporunu uygulama içinde göstermek için ekran
                         composable(
                             route = "traffic_pdf_viewer/{trafficInspectionId}",
                             arguments = listOf(

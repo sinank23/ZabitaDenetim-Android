@@ -146,3 +146,34 @@ data class TrafficInspectionResponse(
     @SerializedName("created_at")
     val createdAt: String
 )
+
+//31.08.2026
+// fotoğraf bilgisini tutmak için
+
+data class TrafficInspectionPhotoResponse(
+    @SerializedName("photo_id")
+    val photoId: Int,
+
+    @SerializedName("traffic_inspection_id")
+    val trafficInspectionId: Int,
+
+    @SerializedName("photo_path")
+    val photoPath: String,
+
+    @SerializedName("photo_url")
+    val photoUrl: String,
+
+    @SerializedName("created_at")
+    val createdAt: String
+)
+
+//31.08.2026
+// trafik işlem durum güncelleme sonucunu tutmak için
+data class TrafficStatusUpdateResponse(
+    val message: String,
+
+    @SerializedName("traffic_inspection_id")
+    val trafficInspectionId: Int,
+
+    val status: String
+)

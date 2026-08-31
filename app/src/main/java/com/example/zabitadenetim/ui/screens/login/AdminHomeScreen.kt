@@ -14,7 +14,8 @@ fun AdminHomeScreen(
     onNavigateToCategories: () -> Unit,
     onNavigateToCriteria: () -> Unit,
     onNavigateToUsers: () -> Unit,
-    onNavigateToReports: () -> Unit
+    onNavigateToReports: () -> Unit,
+    onNavigateToTrafficRecords: () -> Unit
 ) {
 
     //18.08.2026
@@ -84,5 +85,18 @@ fun AdminHomeScreen(
         ) {
             Text("Raporlar")
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+//31.08.2026
+// süper admin trafik zabıta işlem kayıtlarını görüntüleyebilsin
+        Button(
+            onClick = onNavigateToTrafficRecords,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Trafik İşlemleri")
+        }
+
+
     }
 }
