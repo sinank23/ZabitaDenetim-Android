@@ -8,8 +8,10 @@ data class BusinessCreateRequest(
     val name: String,
 
     // kotlinin anlayacağı modele dönüştürmek için serializedname
-    @SerializedName("category_id")
-    val categoryId: Int,
+    //01.09.2026
+// Google'dan otomatik gelen veya zabıtanın elle girdiği faaliyet konusu
+    @SerializedName("activity_type")
+    val activityType: String?,
 
     //işletme adresi
     val address: String?,

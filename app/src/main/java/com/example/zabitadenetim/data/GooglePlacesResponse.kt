@@ -19,5 +19,10 @@ data class GooglePlaceResponse(
 
     // İşletmenin Google Maps koordinatları.
     val latitude: Double?,
-    val longitude: Double?
+    val longitude: Double?,
+
+    //01.09.2026
+// Google Places üzerinden dönen faaliyet konusu
+    @SerializedName("activity_type")
+    val activityType: String?
 )

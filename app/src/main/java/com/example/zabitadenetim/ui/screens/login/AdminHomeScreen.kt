@@ -4,6 +4,10 @@ import android.service.autofill.UserData
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -15,8 +19,15 @@ fun AdminHomeScreen(
     onNavigateToCriteria: () -> Unit,
     onNavigateToUsers: () -> Unit,
     onNavigateToReports: () -> Unit,
-    onNavigateToTrafficRecords: () -> Unit
+    onNavigateToTrafficRecords: () -> Unit,
+    onLogout: () -> Unit
 ) {
+
+    //01.09.2026
+    // süper admin çıkış onay penceresinin durumunu tutmak için
+    var showLogoutDialog by remember {
+        mutableStateOf(false)
+    }
 
     //18.08.2026
     // süper admin için oluşturulan yönetim ekranı
@@ -97,6 +108,57 @@ fun AdminHomeScreen(
             Text("Trafik İşlemleri")
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
 
+        //01.09.2026
+        // süper admin sistemden güvenli şekilde çıkış yapabilsin
+        OutlinedButton(
+            onClick = {
+                showLogoutDialog = true
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Çıkış Yap")
+        }
+    }
+
+    //01.09.2026
+    // süper admin çıkış işleminden önce kullanıcıdan onay almak için
+    if (showLogoutDialog) {
+
+        AlertDialog(
+            onDismissRequest = {
+                showLogoutDialog = false
+            },
+
+            title = {
+                Text("Çıkış Yap")
+            },
+
+            text = {
+                Text("Çıkış yapmak istediğinize emin misiniz?")
+            },
+
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    }
+                ) {
+                    Text("Evet")
+                }
+            },
+
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                    }
+                ) {
+                    Text("Hayır")
+                }
+            }
+        )
     }
 }

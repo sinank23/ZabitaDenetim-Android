@@ -233,6 +233,16 @@ fun AdminUserScreen(
                                         Text("Zabıta")
                                     }
 
+//01.09.2026
+// trafik zabıta kullanıcı rolünü seçebilmek için
+                                    TextButton(
+                                        onClick = {
+                                            newUserRole = "trafik_zabita"
+                                        }
+                                    ) {
+                                        Text("Trafik Zabıta")
+                                    }
+
                                     TextButton(
                                         onClick = {
                                             newUserRole = "superadmin"
@@ -441,6 +451,16 @@ fun AdminUserScreen(
                             }
                         ) {
                             Text("Zabıta")
+                        }
+
+//01.09.2026
+// mevcut kullanıcının rolünü trafik zabıta olarak değiştirebilmek için
+                        TextButton(
+                            onClick = {
+                                editingUserRole = "trafik_zabita"
+                            }
+                        ) {
+                            Text("Trafik Zabıta")
                         }
 
                         TextButton(

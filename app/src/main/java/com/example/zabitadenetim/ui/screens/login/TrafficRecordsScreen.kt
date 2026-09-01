@@ -37,6 +37,7 @@ fun TrafficRecordsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDetail: (Int) -> Unit,
     onNavigateToPdf: (Int) -> Unit,
+    isAdmin: Boolean = false,
     viewModel: TrafficInspectionViewModel = viewModel()
 ) {
 
@@ -158,6 +159,20 @@ fun TrafficRecordsScreen(
                                         text = "Kayıt No: ${traffic.id}",
                                         style = MaterialTheme.typography.bodySmall
                                     )
+
+                                    //01.09.2026
+                                    // süper admin trafik kaydını oluşturan personeli görebilsin
+                                    if (isAdmin) {
+
+                                        Spacer(
+                                            modifier = Modifier.height(4.dp)
+                                        )
+
+                                        Text(
+                                            text = "Personel: ${traffic.inspectorName ?: "Belirtilmemiş"}",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
 
                                     Spacer(
                                         modifier = Modifier.height(4.dp)

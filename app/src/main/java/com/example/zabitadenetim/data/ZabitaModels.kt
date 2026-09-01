@@ -143,6 +143,11 @@ data class TrafficInspectionResponse(
     @SerializedName("inspector_id")
     val inspectorId: Int,
 
+    //01.09.2026
+    // trafik işlemini gerçekleştiren personelin adını tutmak için
+    @SerializedName("inspector_name")
+    val inspectorName: String?,
+
     @SerializedName("created_at")
     val createdAt: String
 )

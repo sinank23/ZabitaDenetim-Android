@@ -31,6 +31,12 @@ fun HomeScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
+    //01.09.2026
+// çıkış onay penceresinin durumunu tutmak için
+    var showLogoutDialog by remember {
+        mutableStateOf(false)
+    }
+
     // 11.08.2026
     // işletme adına göre denetim arama
     var searchQuery by remember {
@@ -78,7 +84,11 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("Zabıta Denetim Sistemi") },
                 actions = {
-                    IconButton(onClick = { onLogout() }) {
+                    IconButton(
+                        onClick = {
+                            showLogoutDialog = true
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ExitToApp,
                             contentDescription = "Çıkış Yap"
@@ -313,5 +323,45 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    //01.09.2026
+// normal zabıta çıkış işleminden önce kullanıcıdan onay almak için
+    if (showLogoutDialog) {
+
+        AlertDialog(
+            onDismissRequest = {
+                showLogoutDialog = false
+            },
+
+            title = {
+                Text("Çıkış Yap")
+            },
+
+            text = {
+                Text("Çıkış yapmak istediğinize emin misiniz?")
+            },
+
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    }
+                ) {
+                    Text("Evet")
+                }
+            },
+
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                    }
+                ) {
+                    Text("Hayır")
+                }
+            }
+        )
     }
 }

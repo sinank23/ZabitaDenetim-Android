@@ -133,6 +133,20 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(
                                         "admin_traffic_records"
                                     )
+                                },
+
+                                //01.09.2026
+                                // süper admin çıkış yaptığında token silinir ve giriş ekranına dönülür
+                                onLogout = {
+
+                                    val tokenManager = TokenManager(this@MainActivity)
+                                    tokenManager.clearToken()
+
+                                    navController.navigate("login") {
+                                        popUpTo("admin_home") {
+                                            inclusive = true
+                                        }
+                                    }
                                 }
                             )
                         }
@@ -149,6 +163,20 @@ class MainActivity : ComponentActivity() {
 
                                 onNavigateToTrafficRecords = {
                                     navController.navigate("traffic_records")
+                                },
+
+                                //01.09.2026
+                                // trafik zabıta çıkış yaptığında token silinir ve giriş ekranına dönülür
+                                onLogout = {
+
+                                    val tokenManager = TokenManager(this@MainActivity)
+                                    tokenManager.clearToken()
+
+                                    navController.navigate("login") {
+                                        popUpTo("traffic_home") {
+                                            inclusive = true
+                                        }
+                                    }
                                 }
                             )
                         }
@@ -404,7 +432,11 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(
                                         "traffic_pdf_viewer/$trafficInspectionId"
                                     )
-                                }
+                                },
+
+                                //01.09.2026
+                                // süper admin trafik kayıtlarında personel bilgisini görebilsin
+                                isAdmin = true
                             )
                         }
 

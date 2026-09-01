@@ -120,11 +120,10 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
         mutableStateOf<List<InspectionCriterionResponse>>(emptyList())
     }
 
-    var isBusinessCategoryMenuExpanded by remember {
-        mutableStateOf(false)
-    }
-    var selectedBusinessCategory by remember {
-        mutableStateOf<BusinessCategoryResponse?>(null)
+    //01.09.2026
+// faaliyet konusu Google'dan otomatik gelir, gelmezse zabıta elle girer
+    var activityType by remember {
+        mutableStateOf("")
     }
 
     // zabıta notu modülü
@@ -425,6 +424,11 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                             selectedGooglePlace = place
                             businessName = place.name
                             address = place.address ?: ""
+
+                            //01.09.2026
+// Google faaliyet konusu döndürdüyse otomatik doldur
+                            activityType = place.activityType ?: ""
+
                             isGooglePlacesMenuExpanded = false
                         }
                     )
@@ -443,46 +447,12 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            ExposedDropdownMenuBox(
-                expanded = isBusinessCategoryMenuExpanded,
-                onExpandedChange = {
-                    isBusinessCategoryMenuExpanded = !isBusinessCategoryMenuExpanded
-                }
-            ) {
-                OutlinedTextField(
-                    value = selectedBusinessCategory?.name ?: "",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Faaliyet Konusu") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = isBusinessCategoryMenuExpanded
-                        )
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = isBusinessCategoryMenuExpanded,
-                    onDismissRequest = {
-                        isBusinessCategoryMenuExpanded = false
-                    }
-                ) {
-                    businessCategories.forEach { category ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(category.name)
-                            },
-                            onClick = {
-                                selectedBusinessCategory = category
-                                isBusinessCategoryMenuExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
+            OutlinedTextField(
+                value = activityType,
+                onValueChange = { activityType = it },
+                label = { Text("Faaliyet Konusu") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             OutlinedTextField(
                 value = ownerName,
@@ -658,7 +628,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                         businessName.isNotBlank() &&
                         address.isNotBlank() &&
                         selectedGooglePlace != null &&
-                        selectedBusinessCategory != null &&
+                        activityType.isNotBlank() &&
                         selectedImageUris.isNotEmpty()
                     ) {
                         coroutineScope.launch {
@@ -673,8 +643,7 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                     ApiClient.apiService.createBusiness(
                                         BusinessCreateRequest(
                                             name = googlePlace.name,
-                                            categoryId = selectedBusinessCategory!!.id,
-
+                                            activityType = activityType.ifBlank { null },
                                             address = googlePlace.address,
                                             latitude = googlePlace.latitude,
                                             longitude = googlePlace.longitude,
@@ -812,8 +781,8 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                     "Lütfen önce Google Maps sonuçlarından bir işletme seçin."
                                 }
 
-                                selectedBusinessCategory == null -> {
-                                    "Lütfen işletmenin faaliyet konusunu seçin."
+                                activityType.isBlank() -> {
+                                    "Lütfen işletmenin faaliyet konusunu girin."
                                 }
 
                                 selectedImageUris.isEmpty() -> {
