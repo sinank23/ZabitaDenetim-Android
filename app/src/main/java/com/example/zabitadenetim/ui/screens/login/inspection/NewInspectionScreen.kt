@@ -82,6 +82,14 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import com.example.zabitadenetim.data.InspectionCriterionResponse
 import com.example.zabitadenetim.ui.model.InspectionAnswerRequest
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewInspectionScreen(onNavigateBack: () -> Unit) {
@@ -463,11 +471,77 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
+
+
+            //02.09.2026
+// telefon numarası yalnızca rakam kabul eder ve 11 haneyle sınırlandırılır
+
+
             OutlinedTextField(
                 value = contactInfo,
-                onValueChange = { contactInfo = it },
-                label = { Text("İletişim Bilgisi") },
-                modifier = Modifier.fillMaxWidth()
+
+
+                onValueChange = { newValue ->
+
+                    val digits = newValue
+                        .filter { it.isDigit() }
+                        .take(11)
+
+                    contactInfo = when {
+                        digits.length <= 4 ->
+                            digits
+
+                        digits.length <= 7 ->
+                            "${digits.substring(0, 4)} ${digits.substring(4)}"
+
+                        digits.length <= 9 ->
+                            "${digits.substring(0, 4)} ${digits.substring(4, 7)} ${digits.substring(7)}"
+
+                        else ->
+                            "${digits.substring(0, 4)} ${digits.substring(4, 7)} ${digits.substring(7, 9)} ${digits.substring(9)}"
+                    }
+
+
+                },
+                label = { Text("Telefon Numarası") },
+                placeholder = { Text("0532 123 45 67") },
+                modifier = Modifier.fillMaxWidth(),
+                //02.09.2026
+// telefon numarasının ilk iki rakamını gösterip kalan rakamları yıldızla gizlemek için
+                visualTransformation = object : VisualTransformation {
+
+                    override fun filter(text: AnnotatedString): TransformedText {
+
+                        var digitCount = 0
+
+                        val maskedText = buildString {
+                            text.text.forEach { char ->
+
+                                if (char.isDigit()) {
+                                    digitCount++
+
+                                    if (digitCount <= 2) {
+                                        append(char)
+                                    } else {
+                                        append('*')
+                                    }
+                                } else {
+                                    // telefon formatındaki boşlukları aynen koru
+                                    append(char)
+                                }
+                            }
+                        }
+
+                        return TransformedText(
+                            AnnotatedString(maskedText),
+                            OffsetMapping.Identity
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone
+                ),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -639,6 +713,13 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
 // İşletme daha önce kayıtlıysa backend mevcut kaydı geri döndürür.
                                 val googlePlace = selectedGooglePlace!!
 
+                                //02.09.2026
+// backend'e gönderilecek telefon numarasını kontrol etmek için
+                                Log.d(
+                                    "TelefonKontrol",
+                                    "Gönderilecek telefon: ${contactInfo.filter { it.isDigit() }}"
+                                )
+
                                 val createdBusiness =
                                     ApiClient.apiService.createBusiness(
                                         BusinessCreateRequest(
@@ -648,7 +729,11 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                                             latitude = googlePlace.latitude,
                                             longitude = googlePlace.longitude,
                                             ownerName = ownerName.ifBlank { null },
-                                            contactInfo = contactInfo.ifBlank { null },
+                                            //02.09.2026
+// ekranda maskeli görünen telefon numarasını veritabanına yalnızca rakam olarak gönder
+                                            contactInfo = contactInfo
+                                                .filter { it.isDigit() }
+                                                .ifBlank { null },
                                             googlePlaceId = googlePlace.placeId
                                         )
                                     )
@@ -776,8 +861,8 @@ fun NewInspectionScreen(onNavigateBack: () -> Unit) {
                         val errorMessage =
                             when {
                                 selectedGooglePlace == null ||
-                                businessName.isBlank() ||
-                                address.isBlank() -> {
+                                        businessName.isBlank() ||
+                                        address.isBlank() -> {
                                     "Lütfen önce Google Maps sonuçlarından bir işletme seçin."
                                 }
 
