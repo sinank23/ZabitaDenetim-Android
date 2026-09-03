@@ -32,7 +32,6 @@ import com.example.zabitadenetim.ui.screens.login.inspection.BusinessInspectionH
 import com.example.zabitadenetim.ui.screens.login.inspection.InspectionComparisonScreen
 
 import com.example.zabitadenetim.ui.screens.login.AdminHomeScreen
-import com.example.zabitadenetim.ui.screens.login.AdminCategoryScreen
 
 import com.example.zabitadenetim.ui.screens.login.AdminCriteriaScreen
 import com.example.zabitadenetim.ui.screens.login.AdminUserScreen
@@ -110,10 +109,6 @@ class MainActivity : ComponentActivity() {
                         composable("admin_home") {
 
                             AdminHomeScreen(
-                                onNavigateToCategories = {
-                                    navController.navigate("admin_categories")
-                                },
-
                                 onNavigateToCriteria = {
                                     navController.navigate("admin_criteria")
                                 },
@@ -345,19 +340,6 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 },
 
-                                onNavigateBack = {
-                                    navController.popBackStack()
-                                }
-                            )
-                        }
-
-
-                        //19.08.2026
-
-                        //admin kategori yönetim ekranı
-                        composable("admin_categories") {
-
-                            AdminCategoryScreen(
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }

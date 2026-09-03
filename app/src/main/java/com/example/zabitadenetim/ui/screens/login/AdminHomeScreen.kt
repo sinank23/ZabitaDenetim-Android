@@ -1,6 +1,5 @@
 package com.example.zabitadenetim.ui.screens.login
 
-import android.service.autofill.UserData
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,7 +14,6 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AdminHomeScreen(
-    onNavigateToCategories: () -> Unit,
     onNavigateToCriteria: () -> Unit,
     onNavigateToUsers: () -> Unit,
     onNavigateToReports: () -> Unit,
@@ -35,10 +33,10 @@ fun AdminHomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
 
-        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             text = "Süper Admin Paneli",
@@ -46,7 +44,6 @@ fun AdminHomeScreen(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
-
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
@@ -55,17 +52,6 @@ fun AdminHomeScreen(
         )
 
         Spacer(modifier = Modifier.height(32.dp))
-
-        //18.08.2026
-        // işletme kategorilerini yönetmek için
-        Button(
-            onClick = onNavigateToCategories,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Kategori Yönetimi")
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         // denetim maddelerini yönetmek için
         Button(
@@ -84,8 +70,6 @@ fun AdminHomeScreen(
         ) {
             Text("Kullanıcı Yönetimi")
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         Spacer(modifier = Modifier.height(12.dp))
 
